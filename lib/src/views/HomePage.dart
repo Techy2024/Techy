@@ -24,6 +24,7 @@ class _HomePageState extends State<HomePage> {
         print('_apiResponse: $_apiResponse');
 
       });
+      
       _controller.clear(); // 发送后清空输入框
     }
   }
@@ -36,24 +37,16 @@ class _HomePageState extends State<HomePage> {
       ),
       child: Stack(
         children: [
-          Container(
-            decoration: BoxDecoration(
-              image: DecorationImage(
-                image: AssetImage('assets/image/background.jpg'),
-                fit: BoxFit.cover,
-              ),
-            ),
-          ),
           // 顯示 API 回應的框
           if (_apiResponse != null)
             Positioned(
               top: 100,
-              left: 20,
-              right: 20,
+              left: 50,
+              right: 50,
               child: Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.8),
+                  color: const Color.fromARGB(255, 220, 220, 220).withOpacity(0.8),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Text(
@@ -62,29 +55,54 @@ class _HomePageState extends State<HomePage> {
                 ),
               ),
             ),
+            
           // 顯示圖片按鈕並導航
           Positioned(
             top: 200,
             right: 50,
             child: GestureDetector(
               onTap: () => _navigateToNewPage(context, 'Note'),
-              child: Image.asset('assets/image/note.png', width: 100, height: 100),
+              child: Image.asset('assets/image/note/Blue.png', width: 50),
             ),
           ),
           Positioned(
             top: 250,
-            left: 50,
+            right: 30,
             child: GestureDetector(
-              onTap: () => _navigateToNewPage(context, 'Calendar'),
-              child: Image.asset('assets/image/calendar.png', width: 100, height: 100),
+              onTap: () => _navigateToNewPage(context, 'Note'),
+              child: Image.asset('assets/image/note/Green.png', width: 50),
             ),
           ),
           Positioned(
+            top: 250,
+            right: 100,
+            child: GestureDetector(
+              onTap: () => _navigateToNewPage(context, 'Note'),
+              child: Image.asset('assets/image/note/Pink.png', width: 50),
+            ),
+          ),
+
+          Positioned(
             bottom: 100,
-            left: 150,
+            right: 30,
+            child: GestureDetector(
+              child: Image.asset('assets/image/Table.png', width: 250),
+            ),
+          ),
+          Positioned(
+            top: 230,
+            left: 10,
+            child: GestureDetector(
+              onTap: () => _navigateToNewPage(context, 'Calendar'),
+              child: Image.asset('assets/image/calendar/Calendar.png', width: 200),
+            ),
+          ),
+          Positioned(
+            bottom: 270,
+            right: 50,
             child: GestureDetector(
               onTap: () => _navigateToNewPage(context, 'Diary'),
-              child: Image.asset('assets/image/diary.png', width: 100, height: 100),
+              child: Image.asset('assets/image/Diary.png', width: 100),
             ),
           ),
           // 底部输入框和发送按钮
@@ -97,10 +115,21 @@ class _HomePageState extends State<HomePage> {
                 children: [
                   SizedBox(
                     width: 250,
-                    child: CupertinoTextField(
-                      controller: _controller,
-                      placeholder: "Type a message",
-                      onSubmitted: (value) => _sendMessage(context),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        border: Border.all(
+                          color: Colors.grey[800]!, // 深灰色邊框
+                          width: 1.0, // 邊框寬度
+                        ),
+                        color: const Color.fromARGB(255, 194, 194, 194).withOpacity(0.8), // 設置底色
+                        borderRadius: BorderRadius.circular(10.0), // 圓角
+                      ),
+                      
+                      child: CupertinoTextField(
+                        controller: _controller,
+                        placeholder: "Type a message",
+                        onSubmitted: (value) => _sendMessage(context),
+                      ),
                     ),
                   ),
                   CupertinoButton(
@@ -111,10 +140,13 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
           ),
+
         ],
       ),
     );
+    
   }
+  
 
   void _navigateToNewPage(BuildContext context, String pageName) {
     Navigator.push(

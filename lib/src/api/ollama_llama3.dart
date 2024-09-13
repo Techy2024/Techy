@@ -11,7 +11,7 @@ class OllamaApiService {
     final body = jsonEncode({
       "model": "llama3.1",
       "messages": [
-        {"role": "user", "content": content}
+        {"role": "user", "content": '$content,reply short'} // 都設為簡短回答
       ],
       "stream": false,
     });

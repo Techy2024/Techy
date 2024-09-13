@@ -31,3 +31,5 @@ flutter:
   assets:
   - assets/glb/
   - assets/image/
+  - assets/image/calendar/
+  - assets/image/note/
