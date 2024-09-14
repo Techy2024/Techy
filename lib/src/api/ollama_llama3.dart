@@ -10,8 +10,15 @@ class OllamaApiService {
     // 準備要傳遞的資料
     final body = jsonEncode({
       "model": "llama3.1",
-      "messages": [
-        {"role": "user", "content": '$content,reply short'} // 都設為簡短回答
+        "messages": [
+        {
+          "role": "user",
+          "content": '''
+          This is the question you need to reply: $content.
+          Your character is Techy. Your responses will always start with 'Bebo!' and will only address simple questions.
+          Keep your responses short, with a maximum of 10 words.
+          '''
+        } // 確保這裡的內容是你想要的格式
       ],
       "stream": false,
     });

@@ -40,8 +40,11 @@ class _HomePageState extends State<HomePage> {
           // 顯示 API 回應的框
           if (_apiResponse != null)
             Positioned(
-              top: 100,
-              left: 50,
+              // top: 100,
+              // left: 50,
+              // right: 50,
+              bottom: 330,
+              left: 160,
               right: 50,
               child: Container(
                 padding: const EdgeInsets.all(10),
@@ -55,7 +58,16 @@ class _HomePageState extends State<HomePage> {
                 ),
               ),
             ),
-            
+          
+          // 顯示 GIF 圖片
+          Positioned(
+            bottom: 250,
+            left: 10,
+            child: Container(
+              width: 200, // 設置 GIF 顯示的寬度
+              child: Image.asset('assets/gif/ISTP_walk_gif.gif'),  // 加載 GIF
+            ),
+          ),
           // 顯示圖片按鈕並導航
           Positioned(
             top: 200,
@@ -83,10 +95,10 @@ class _HomePageState extends State<HomePage> {
           ),
 
           Positioned(
-            bottom: 100,
+            bottom: 90,
             right: 30,
             child: GestureDetector(
-              child: Image.asset('assets/image/Table.png', width: 250),
+              child: Image.asset('assets/image/Table.png', width: 200),
             ),
           ),
           Positioned(
@@ -98,11 +110,11 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
           Positioned(
-            bottom: 270,
+            bottom: 220,
             right: 50,
             child: GestureDetector(
               onTap: () => _navigateToNewPage(context, 'Diary'),
-              child: Image.asset('assets/image/Diary.png', width: 100),
+              child: Image.asset('assets/image/Diary.png', width: 80),
             ),
           ),
           // 底部输入框和发送按钮
