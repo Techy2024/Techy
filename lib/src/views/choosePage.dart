@@ -11,29 +11,30 @@ class CubeMenuPage extends StatefulWidget {
 class _CubeMenuPageState extends State<CubeMenuPage> {
   PageController _pageController = PageController();
 
-  List<String> glbAssets = [
-    'assets/glb/sheen_chair.glb',
-    'assets/glb/sheen_chair.glb',
-    'assets/glb/sheen_chair.glb',
-    'assets/glb/sheen_chair.glb',
+  // 替換為 GIF 文件
+  List<String> gifAssets = [
+    'assets/gif/techy/ISTP_walk_gif.gif',
+    'assets/gif/techy/ISTP_walk_gif.gif',
+    'assets/gif/techy/ISTP_walk_gif.gif',
+    'assets/gif/techy/ISTP_walk_gif.gif',
   ];
 
   List<Color> backgroundColors = [
-    const Color.fromARGB(255, 247, 179, 179),
-    const Color.fromARGB(255, 149, 197, 174),
-    const Color.fromARGB(255, 152, 171, 204),
-    Color.fromARGB(255, 231, 218, 160),
+    const Color.fromARGB(255, 194, 205, 227),
+    const Color.fromARGB(255, 197, 216, 193),
+    const Color.fromARGB(255, 236, 235, 208),
+    const Color.fromARGB(255, 228, 215, 200),
   ];
 
   List<String> characterInfos = [
-    '角色簡介:\n 姓名: A /n身高: 170cm',
-    '角色簡介:\n 姓名: B /n身高: 180cm',
-    '角色簡介:\n 姓名: C /n身高: 175cm',
-    '角色簡介:\n 姓名: D /n身高: 165cm',
+    '角色簡介:\n 姓名: A \n身高: 15cm',
+    '角色簡介:\n 姓名: B \n身高: 18cm',
+    '角色簡介:\n 姓名: C \n身高: 17.5cm',
+    '角色簡介:\n 姓名: D \n身高: 16.5cm',
   ];
 
   void _nextPage() {
-    if (_pageController.page != null && _pageController.page! < glbAssets.length - 1) {
+    if (_pageController.page != null && _pageController.page! < gifAssets.length - 1) {
       _pageController.nextPage(duration: Duration(milliseconds: 300), curve: Curves.easeInOut);
     }
   }
@@ -52,10 +53,10 @@ class _CubeMenuPageState extends State<CubeMenuPage> {
           children: [
             PageView.builder(
               controller: _pageController,
-              itemCount: glbAssets.length,
+              itemCount: gifAssets.length,
               itemBuilder: (context, index) {
                 return CubePage(
-                  glbAsset: glbAssets[index],
+                  gifAsset: gifAssets[index], // 使用 GIF 文件
                   backgroundColor: backgroundColors[index],
                   characterInfo: characterInfos[index],
                   onButtonPressed: () {
@@ -100,13 +101,14 @@ class _CubeMenuPageState extends State<CubeMenuPage> {
   }
 }
 
+
 class CubePage extends StatelessWidget {
-  final String glbAsset;
+  final String gifAsset;
   final Color backgroundColor;
   final String characterInfo;
   final VoidCallback onButtonPressed;
 
-  CubePage({required this.glbAsset, required this.backgroundColor, required this.characterInfo, required this.onButtonPressed});
+  CubePage({required this.gifAsset, required this.backgroundColor, required this.characterInfo, required this.onButtonPressed});
 
   @override
   Widget build(BuildContext context) {
@@ -120,23 +122,26 @@ class CubePage extends StatelessWidget {
               padding: const EdgeInsets.all(8.0),
               child: Text(
                 '左右滑動選擇',
-                style: TextStyle(fontSize: 20, color: Colors.white),
+                style: TextStyle(fontSize: 16, color: Colors.black),
               ),
             ),
             SizedBox(
               width: 300,
               height: 300,
-              child: Flutter3DViewer(
-                src: glbAsset,
+              child: Image.asset(
+                gifAsset, // 使用 GIF 文件
+                fit: BoxFit.cover, // 設置適合的顯示方式
               ),
             ),
+            SizedBox(height: 40), 
             Padding(
               padding: const EdgeInsets.all(8.0),
               child: Text(
                 characterInfo,
-                style: TextStyle(fontSize: 18, color: Colors.white),
+                style: TextStyle(fontSize: 14, color: Colors.black),
               ),
             ),
+            SizedBox(height: 40), 
             Positioned(
               top: 100,
               left: 0,

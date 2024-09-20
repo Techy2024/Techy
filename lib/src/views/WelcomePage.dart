@@ -15,8 +15,6 @@ class TechyApp extends StatelessWidget {
 }
 
 class WelcomeHomePage extends StatelessWidget {
-  final Flutter3DController controller = Flutter3DController();
-
   @override
   Widget build(BuildContext context) {
     return CupertinoPageScaffold(
@@ -54,14 +52,12 @@ class WelcomeHomePage extends StatelessWidget {
                 SizedBox(
                   width: 300,
                   height: 300,
-                  child: Container(
-                    child: Flutter3DViewer(
-                      controller: controller,
-                      src: 'assets/glb/sheen_chair.glb',
-                    ),
+                  child: Image.asset(
+                    'assets/gif/techy/ISTP_walk_gif.gif', // 使用 GIF 文件
+                    fit: BoxFit.cover, // 设置适合的显示方式
                   ),
                 ),
-                SizedBox(height: 20), // 添加間距
+                SizedBox(height: 40), // 添加间距
                 Text(
                   "點擊空白處進入應用程式",
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
