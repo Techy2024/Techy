@@ -104,6 +104,7 @@ class _HomePageState extends State<HomePage> {
             fit: BoxFit.cover,
           ),
         ),
+        
         child: Stack(
           children: [
             // 顯示 API 回應的框
