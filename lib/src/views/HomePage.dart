@@ -85,6 +85,7 @@ class _HomePageState extends State<HomePage> {
               child: Image.asset('assets/image/note/Green.png', width: 50),
             ),
           ),
+          
           Positioned(
             top: 250,
             right: 100,
