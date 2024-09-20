@@ -1,7 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
-import '../styles/styles.dart';
 import 'package:flutter_3d_controller/flutter_3d_controller.dart';
 import 'ChoosePage.dart';
 
