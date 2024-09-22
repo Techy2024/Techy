@@ -8,7 +8,11 @@ class TechyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return CupertinoApp(
-      home: WelcomeHomePage(),
+      title: 'Techy App',
+      home: WelcomeHomePage(), // 將首頁設置為 WelcomePage
+      theme: CupertinoThemeData(
+        primaryColor: CupertinoColors.activeBlue,
+      ),
     );
   }
 }

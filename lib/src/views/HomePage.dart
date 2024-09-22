@@ -1,9 +1,11 @@
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart'; 
 import 'package:speech_to_text/speech_to_text.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../api/ollama_llama3.dart'; 
+import 'Note.dart'; 
+import 'Calendar.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -33,6 +35,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _startListening() async {
+    print('start...');
     await _speechToText.listen(
       onResult: _onSpeechResult,
       localeId: 'zh_CN', // 中文
@@ -46,7 +49,7 @@ class _HomePageState extends State<HomePage> {
     await _speechToText.stop();
 
     // 等待 UI 更新完成
-    await Future.delayed(Duration(milliseconds: 500)); // 調整延遲時間以確保值已更新
+    await Future.delayed(Duration(milliseconds: 1000)); // 調整延遲時間以確保值已更新
 
     // 確保在 API 調用前 _wordsSpoken 是最新的
     final recognizedWords = _wordsSpoken;
@@ -66,7 +69,6 @@ class _HomePageState extends State<HomePage> {
     setState(() {
       _wordsSpoken = recognizedWords;
       _confidenceLevel = confidenceLevel;
-      _controller.text = _wordsSpoken; // Populate the input field with spoken words
     });
   }
 
@@ -141,20 +143,23 @@ class _HomePageState extends State<HomePage> {
               top: 190,
               right: 30,
               child: GestureDetector(
-                onTap: () => _navigateToNewPage(context, 'Note'),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    CupertinoPageRoute(builder: (context) => NotePage()), // 跳转到 NotePage
+                  );
+                },
                 child: SizedBox(
-                  width: 130, // 设定宽度
-                  height: 100, // 设定高度
+                  width: 130,
+                  height: 100,
                   child: CupertinoButton(
-                    child: Container(
-                      // decoration: BoxDecoration(
-                      //   border: Border.all( // 添加边框
-                      //     color: const Color.fromARGB(255, 158, 54, 244), // 边框颜色
-                      //     width: 2.0, // 边框宽度
-                      //   ),
-                      // ),
-                    ),
-                    onPressed: () => _navigateToNewPage(context, 'Note'), // 跳转页面
+                    child: Container(),
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        CupertinoPageRoute(builder: (context) => NotePage()), // 跳转到 NotePage
+                      );
+                    },
                     padding: EdgeInsets.all(0), // 移除内边距
                   ),
                 ),
@@ -166,25 +171,29 @@ class _HomePageState extends State<HomePage> {
               top: 220,
               left: 50,
               child: GestureDetector(
-                onTap: () => _navigateToNewPage(context, 'Calendar'),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => CalendarPage()), // 直接跳轉到 CalendarPage
+                  );
+                },
                 child: SizedBox(
                   width: 130, // 设定宽度
                   height: 150, // 设定高度
                   child: CupertinoButton(
-                    child: Container(
-                      // decoration: BoxDecoration(
-                      //   border: Border.all( // 添加边框
-                      //     color: Colors.red, // 边框颜色
-                      //     width: 2.0, // 边框宽度
-                      //   ),
-                      // ),
-                    ),
-                    onPressed: () => _navigateToNewPage(context, 'Calendar'), // 跳转页面
+                    child: Container(),
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => CalendarPage()), // 直接跳转页面
+                      );
+                    },
                     padding: EdgeInsets.all(0), // 移除内边距
                   ),
                 ),
               ),
             ),
+
 
             // Diary 按钮
             Positioned(
@@ -220,7 +229,7 @@ class _HomePageState extends State<HomePage> {
                   mainAxisAlignment: MainAxisAlignment.center, // 水平居中对齐
                   children: [
                     SizedBox(
-                      width: 250,
+                      width: 200,
                       child: Container(
                         decoration: BoxDecoration(
                           border: Border.all(

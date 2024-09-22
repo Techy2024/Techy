@@ -20,6 +20,7 @@ dependencies:
   http: ^1.2.2
   video_player: ^2.5.0
   speech_to_text: ^6.3.0
+  table_calendar: ^3.1.2
 
 dev_dependencies:
   flutter_test:
@@ -37,3 +38,7 @@ flutter:
   - assets/image/note/
   - assets/gif/
   - assets/gif/techy/
+  fonts:
+    - family: 851Tegaki
+      fonts:
+        - asset: assets/fonts/851tegaki_zatsu_normal_0883.ttf

@@ -10,18 +10,20 @@ class OllamaApiService {
     // 準備要傳遞的資料
     final body = jsonEncode({
       "model": "llama3.1",
+      // "model": "taide",
         "messages": [
         {
           "role": "user",
           "content": '''
-          This is the question you need to reply: $content.
-          Your character is Techy. Your responses will always start with 'Bebo!' and will only address simple questions.
-          請用繁體中文簡短回答，並讓字數限縮在20字以內
+          以下是你需要回答的問題：$content。
+          你的角色是「Techy」，回答時需以「Techy!」開頭，只需回答簡單問題。
+          請用繁體中文簡短回答，字數限縮在20字以內。
           '''
-        } // 確保這裡的內容是你想要的格式
+        }
       ],
       "stream": false,
     });
+
     try {
       final response = await http.post(
         url,
@@ -47,16 +49,29 @@ class OllamaApiService {
     // 準備要傳遞的資料
     final body = jsonEncode({
       "model": "llama3.1",
+      // "model": "taide",
       "messages": [
         {
           "role": "user",
           "content": '''
-          提取以下是見的關鍵字，包括時間、地點、事件名稱，此三者如有缺則預設為未定，以下為須判斷的字串:$content.
+          請提取以下字串中的關鍵字，包括時間、地點、事件名稱，若有缺則預設為未定。字串內容如下：$content。
+          
+          規則：
+          - 當前時間為：${DateTime.now()}。
+          - 若出現「明天」，代表為今天日期加一天。
+          - 若出現「後天」，代表為今天日期加兩天。
+          - 早上：08:00~12:00
+          - 中午：12:00~13:00
+          - 下午：13:00~18:00
+          - 晚上：18:00~00:00
+          
+          請根據這些規則判斷時間，並提取時間、地點和事件名稱。
           '''
         }
       ],
       "stream": false,
     });
+
 
     try {
       final response = await http.post(
