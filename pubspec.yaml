@@ -21,6 +21,7 @@ dependencies:
   video_player: ^2.5.0
   speech_to_text: ^6.3.0
   table_calendar: ^3.1.2
+  bookfx: ^0.0.2
 
 dev_dependencies:
   flutter_test:
@@ -38,6 +39,10 @@ flutter:
   - assets/image/note/
   - assets/gif/
   - assets/gif/techy/
+  - assets/gif/ENFJ/
+  - assets/gif/ESFP/
+  - assets/gif/INTJ/
+  - assets/gif/ISTP/
   fonts:
     - family: 851Tegaki
       fonts:

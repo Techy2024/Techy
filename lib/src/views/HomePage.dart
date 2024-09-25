@@ -6,6 +6,7 @@ import 'dart:convert';
 import '../api/ollama_llama3.dart'; 
 import 'Note.dart'; 
 import 'Calendar.dart';
+import 'Diary.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -13,7 +14,7 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  String _gifPath = 'assets/gif/ISTP_walk_gif.gif';
+  String _gifPath = 'assets/gif/ENFJ/shake_head.gif';
   final TextEditingController _controller = TextEditingController();
   String? _apiResponse; // API 的回應
   final OllamaApiService apiService = OllamaApiService();
@@ -41,6 +42,7 @@ class _HomePageState extends State<HomePage> {
       localeId: 'zh_CN', // 中文
     );
     setState(() {
+      _gifPath = 'assets/gif/ENFJ/wave_hand.gif';
       _confidenceLevel = 0;
     });
   }
@@ -57,6 +59,9 @@ class _HomePageState extends State<HomePage> {
     // 异步调用记录事件的方法
     print("Recognized words before API call: $recognizedWords");
     final event = await apiService.recordEvent(recognizedWords);
+    setState(() {
+      _gifPath = 'assets/gif/ENFJ/shake_head.gif';
+    });
 
   }
 
@@ -80,8 +85,8 @@ class _HomePageState extends State<HomePage> {
       final response = await apiService.generateText(message);
       setState(() {
         _apiResponse = response; // 直接將 API 返回的內容設置為回應
-        print('_apiResponse: $_apiResponse');
-        _gifPath = 'assets/gif/ISTP_walk_wave_jump.gif'; // 更改 GIF 路徑
+        // print('_apiResponse: $_apiResponse');
+        _gifPath = 'assets/gif/ENFJ/jump.gif'; // 更改 GIF 路徑
       });
       _controller.clear(); // 发送后清空输入框
 
@@ -89,7 +94,7 @@ class _HomePageState extends State<HomePage> {
       Future.delayed(Duration(seconds: 5), () {
         setState(() {
           _apiResponse = null;
-          _gifPath = 'assets/gif/ISTP_walk_gif.gif'; // 恢复原始 GIF 路径
+          _gifPath = 'assets/gif/ENFJ/shake_head.gif'; // 恢复原始 GIF 路径
         });
       });
     }
@@ -112,13 +117,13 @@ class _HomePageState extends State<HomePage> {
             // 顯示 API 回應的框
             if (_apiResponse != null)
               Positioned(
-                bottom: 250,
-                left: 60,
-                right: 100,
+                bottom: 350,
+                left: 30,
+                right: 200,
                 child: Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: const Color.fromARGB(255, 219, 219, 219).withOpacity(0.9),
+                    color: const Color.fromARGB(255, 185, 185, 185).withOpacity(0.9),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Text(
@@ -131,9 +136,9 @@ class _HomePageState extends State<HomePage> {
             // 顯示 GIF 圖片
             Positioned(
               bottom: 100,
-              left: 10,
+              left: 0,
               child: Container(
-                width: 200, // 設置 GIF 顯示的寬度
+                width: 400, // 設置 GIF 顯示的寬度
                 child: Image.asset(_gifPath),  // 加載 GIF
               ),
             ),
@@ -174,7 +179,7 @@ class _HomePageState extends State<HomePage> {
                 onTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => CalendarPage()), // 直接跳轉到 CalendarPage
+                    CupertinoPageRoute(builder: (context) => CalendarPage()), // 直接跳轉到 CalendarPage
                   );
                 },
                 child: SizedBox(
@@ -185,7 +190,7 @@ class _HomePageState extends State<HomePage> {
                     onPressed: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => CalendarPage()), // 直接跳转页面
+                        CupertinoPageRoute(builder: (context) => CalendarPage()), // 直接跳转页面
                       );
                     },
                     padding: EdgeInsets.all(0), // 移除内边距
@@ -194,31 +199,30 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
 
-
             // Diary 按钮
             Positioned(
-              bottom: 350,
+              top: 450,
               right: 20,
               child: GestureDetector(
-                onTap: () => _navigateToNewPage(context, 'Diary'),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    CupertinoPageRoute(builder: (context) => DiaryPage()), 
+                  );
+
+                },
                 child: SizedBox(
-                  width: 90, // 设定宽度
-                  height: 80, // 设定高度
-                  child: CupertinoButton(
-                    child: Container(
-                      // decoration: BoxDecoration(
-                      //   border: Border.all( // 添加边框
-                      //     color: Colors.blue, // 边框颜色
-                      //     width: 2.0, // 边框宽度
-                      //   ),
-                      // ),
+                  width: 90, // 設定寬度
+                  height: 80, // 設定高度
+                  child: Container( // 替換掉 CupertinoButton，使用單純的 Container
+                    decoration: BoxDecoration(
+                      color: Colors.transparent, // 你可以設定顏色或透明
                     ),
-                    onPressed: () => _navigateToNewPage(context, 'Diary'), // 跳转页面
-                    padding: EdgeInsets.all(0), // 移除内边距
                   ),
                 ),
               ),
             ),
+
 
             // 底部输入框和发送按钮
             Align(

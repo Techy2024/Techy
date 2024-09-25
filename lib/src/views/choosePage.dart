@@ -13,10 +13,11 @@ class _CubeMenuPageState extends State<CubeMenuPage> {
 
   // 替換為 GIF 文件
   List<String> gifAssets = [
-    'assets/gif/techy/ISTP_walk_gif.gif',
-    'assets/gif/techy/ISTP_walk_gif.gif',
-    'assets/gif/techy/ISTP_walk_gif.gif',
-    'assets/gif/techy/ISTP_walk_gif.gif',
+    'assets/gif/INTJ/wave_hand.gif',
+    'assets/gif/ISTP/wave_hand.gif',
+    'assets/gif/ENFJ/wave_hand.gif',
+    'assets/gif/ESFP/wave_hand.gif',
+
   ];
 
   List<Color> backgroundColors = [

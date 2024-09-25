@@ -8,11 +8,7 @@ class TechyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return CupertinoApp(
-      title: 'Techy App',
-      home: WelcomeHomePage(), // 將首頁設置為 WelcomePage
-      theme: CupertinoThemeData(
-        primaryColor: CupertinoColors.activeBlue,
-      ),
+      home: WelcomeHomePage(),
     );
   }
 }
@@ -56,7 +52,7 @@ class WelcomeHomePage extends StatelessWidget {
                   width: 300,
                   height: 300,
                   child: Image.asset(
-                    'assets/gif/techy/ISTP_walk_gif.gif', // 使用 GIF 文件
+                    'assets/gif/ENFJ/shake_head.gif', // 使用 GIF 文件
                     fit: BoxFit.cover, // 设置适合的显示方式
                   ),
                 ),
