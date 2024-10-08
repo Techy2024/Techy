@@ -1,0 +1,90 @@
+{
+  "project_info": {
+    "project_number": "314515395558",
+    "project_id": "techy-login",
+    "storage_bucket": "techy-login.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:314515395558:android:4da7ef64a2fcaa09647c27",
+        "android_client_info": {
+          "package_name": "com.example.final_project"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "314515395558-oj617rhglvnqhe8g31tqi9v8cojfm9ad.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.final_project",
+            "certificate_hash": "ee572b8097740657c23515711abf3d068262e683"
+          }
+        },
+        {
+          "client_id": "314515395558-brbr9qckuo4jt3gi6oe6rtgtiue8r1hv.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDhG7nsIbEkYm7vIMqc4XJNALfAu-U3kUQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "314515395558-brbr9qckuo4jt3gi6oe6rtgtiue8r1hv.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "314515395558-4g2hmdu55s9nbud1mrr384so3mn5vtaj.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.techyVersion1"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:314515395558:android:232d095a5d808039647c27",
+        "android_client_info": {
+          "package_name": "com.example.techy_version1"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "314515395558-brbr9qckuo4jt3gi6oe6rtgtiue8r1hv.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDhG7nsIbEkYm7vIMqc4XJNALfAu-U3kUQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "314515395558-brbr9qckuo4jt3gi6oe6rtgtiue8r1hv.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "314515395558-4g2hmdu55s9nbud1mrr384so3mn5vtaj.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.techyVersion1"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -117,13 +117,13 @@ class _HomePageState extends State<HomePage> {
             // 顯示 API 回應的框
             if (_apiResponse != null)
               Positioned(
-                bottom: 350,
+                bottom: 300,
                 left: 30,
-                right: 200,
+                right: 180,
                 child: Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: const Color.fromARGB(255, 185, 185, 185).withOpacity(0.9),
+                    color: const Color.fromARGB(255, 227, 227, 227).withOpacity(0.8),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Text(
@@ -270,8 +270,6 @@ class _HomePageState extends State<HomePage> {
       ),
     );
   }
-  
-
   void _navigateToNewPage(BuildContext context, String pageName) {
     Navigator.push(
       context,

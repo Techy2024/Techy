@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:intl/intl.dart';
 
 class OllamaApiService {
 
@@ -8,17 +9,18 @@ class OllamaApiService {
   Future<String?> generateText(String content) async {
     final url = Uri.parse('http://192.168.56.1:11434/api/chat');
     // 準備要傳遞的資料
+    var date = DateTime.now();
+    var day = DateFormat('EEEE').format(date);
+    print(DateTime.now());
+    print(DateFormat('EEEE').format(date));
+
     final body = jsonEncode({
-      "model": "llama3.1",
+      "model": "llama3.1:techy",
       // "model": "taide",
         "messages": [
         {
           "role": "user",
-          "content": '''
-          你的角色是「Techy」，回答時需以「Techy!」開頭，只需回答簡單問題。
-          以下是你需要回答的問題：$content。
-          請用繁體中文簡短回答，字數限縮在20字以內。
-          '''
+          "content": '''今天的日期是$date，$day，$content''',
         }
       ],
       "stream": false,
