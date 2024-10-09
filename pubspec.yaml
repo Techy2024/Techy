@@ -23,6 +23,7 @@ dependencies:
   table_calendar: ^3.1.2
   bookfx: ^0.0.2
   firebase_core: ^3.5.0
+  cloud_firestore: ^5.4.4
 
 dev_dependencies:
   flutter_test:

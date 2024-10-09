@@ -1,12 +1,34 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 
 class OllamaApiService {
 
   OllamaApiService();
 
+  // 儲存事件資料到 Firestore
+  Future<void> saveEventToFirestore(String? date, String? startTime, String? endTime, String? name, String? location) async {
+    FirebaseFirestore firestore = FirebaseFirestore.instance;
+
+    Map<String, dynamic> eventData = {
+      'date': date ?? "null",
+      'start_time': startTime ?? "null",
+      'end_time': endTime ?? "null",
+      'name': name ?? "null",
+      'location': location ?? "null"
+    };
+
+    try {
+      await firestore.collection('List').add(eventData);  // 儲存到 List collection
+      print("事件已成功儲存到 Firebase Firestore");
+    } catch (e) {
+      print("儲存事件時發生錯誤: $e");
+    }
+  }
+
   Future<String?> generateText(String content) async {
+
     final url = Uri.parse('http://192.168.56.1:11434/api/chat');
     // 準備要傳遞的資料
     var date = DateTime.now();
@@ -81,6 +103,7 @@ class OllamaApiService {
           print('結束時間 = ${endTime ?? "null"}');
           print('事件名稱 = ${name ?? "null"}');
           print('地點 = ${location ?? "null"}');
+          await saveEventToFirestore(date, startTime, endTime, name, location);
 
           // 最後回傳聊天回應，去除可能的引號
           // 嘗試匹配有 chatResponse 的情況
