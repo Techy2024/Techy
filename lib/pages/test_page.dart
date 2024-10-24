@@ -27,14 +27,13 @@ class TestPage extends StatelessWidget {
       QuerySnapshot snapshot = await listCollection.get();
 
       for (var doc in snapshot.docs) {
-        // 使用 ?. 運算子避免 null 錯誤
         var data = doc.data() as Map<String, dynamic>?;
         var startTime = data?['start_time'];
         var tag = data?['tag'];
 
         // 如果 tag 已經存在則略過更新
         if (tag != null) {
-          print('跳過 ${doc.id}，tag 已存在');
+          print('跳過 ${doc.id},tag 已存在');
           continue;
         }
 

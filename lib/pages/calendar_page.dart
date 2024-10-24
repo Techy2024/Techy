@@ -124,6 +124,44 @@ class _AddEventDialogState extends State<AddEventDialog> {
   final _locationController = TextEditingController();
   TimeOfDay _startTime = const TimeOfDay(hour: 9, minute: 0);
   TimeOfDay _endTime = const TimeOfDay(hour: 10, minute: 0);
+  String? _timeError; // 新增時間錯誤提示
+
+  // 檢查時間是否合理
+  bool _isTimeValid() {
+    final startMinutes = _startTime.hour * 60 + _startTime.minute;
+    final endMinutes = _endTime.hour * 60 + _endTime.minute;
+    return endMinutes > startMinutes;
+  }
+
+  // 選擇開始時間
+  Future<void> _selectStartTime() async {
+    final TimeOfDay? time = await showTimePicker(
+      context: context,
+      initialTime: _startTime,
+    );
+    if (time != null) {
+      setState(() {
+        _startTime = time;
+        // 檢查時間並更新錯誤訊息
+        _timeError = _isTimeValid() ? null : '結束時間必須晚於開始時間';
+      });
+    }
+  }
+
+  // 選擇結束時間
+  Future<void> _selectEndTime() async {
+    final TimeOfDay? time = await showTimePicker(
+      context: context,
+      initialTime: _endTime,
+    );
+    if (time != null) {
+      setState(() {
+        _endTime = time;
+        // 檢查時間並更新錯誤訊息
+        _timeError = _isTimeValid() ? null : '結束時間必須晚於開始時間';
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -154,38 +192,26 @@ class _AddEventDialogState extends State<AddEventDialog> {
                 children: [
                   Expanded(
                     child: TextButton(
-                      onPressed: () async {
-                        final TimeOfDay? time = await showTimePicker(
-                          context: context,
-                          initialTime: _startTime,
-                        );
-                        if (time != null) {
-                          setState(() {
-                            _startTime = time;
-                          });
-                        }
-                      },
+                      onPressed: _selectStartTime,
                       child: Text('開始時間: ${_startTime.format(context)}'),
                     ),
                   ),
                   Expanded(
                     child: TextButton(
-                      onPressed: () async {
-                        final TimeOfDay? time = await showTimePicker(
-                          context: context,
-                          initialTime: _endTime,
-                        );
-                        if (time != null) {
-                          setState(() {
-                            _endTime = time;
-                          });
-                        }
-                      },
+                      onPressed: _selectEndTime,
                       child: Text('結束時間: ${_endTime.format(context)}'),
                     ),
                   ),
                 ],
               ),
+              if (_timeError != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 8.0),
+                  child: Text(
+                    _timeError!,
+                    style: const TextStyle(color: Colors.red, fontSize: 12),
+                  ),
+                ),
             ],
           ),
         ),
@@ -197,7 +223,7 @@ class _AddEventDialogState extends State<AddEventDialog> {
         ),
         TextButton(
           onPressed: () {
-            if (_formKey.currentState!.validate()) {
+            if (_formKey.currentState!.validate() && _isTimeValid()) {
               final newEvent = Event(
                 name: _nameController.text,
                 startTime:
@@ -209,6 +235,10 @@ class _AddEventDialogState extends State<AddEventDialog> {
                     : _locationController.text,
               );
               Navigator.pop(context, newEvent);
+            } else if (!_isTimeValid()) {
+              setState(() {
+                _timeError = '結束時間必須晚於開始時間';
+              });
             }
           },
           child: const Text('確定'),
@@ -301,13 +331,10 @@ class _CalendarPageState extends State<CalendarPage> {
           }
         }
 
-        // 5. 執行批次更新
         await batch.commit();
-
-        // 6. 重新載入事件
         await _loadEvents();
 
-        // 7. 顯示成功訊息
+        // 顯示成功訊息
         if (resolvedEvents.length > existingEvents.length) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('行程已新增')),
@@ -318,7 +345,6 @@ class _CalendarPageState extends State<CalendarPage> {
           );
         }
       } catch (e) {
-        // 8. 錯誤處理
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('新增行程失敗: $e')),
         );
@@ -327,7 +353,7 @@ class _CalendarPageState extends State<CalendarPage> {
   }
 
   Future<void> _deleteEvent(Event event) async {
-    // 显示确认对话框
+    // 顯示確認的對話框
     final bool? confirm = await showDialog<bool>(
       context: context,
       builder: (BuildContext context) {
@@ -348,26 +374,26 @@ class _CalendarPageState extends State<CalendarPage> {
       },
     );
 
-    // 如果用户确认删除
+    // 如果用戶確認刪除
     if (confirm == true) {
       try {
-        // 从 Firestore 删除事件
+        // 從 firebase 上刪除資料
         await FirebaseFirestore.instance
             .collection('List')
             .doc(event.id)
             .delete();
 
-        // 重新加载事件列表
+        // reload 事件表
         await _loadEvents();
 
-        // 显示成功消息
+        // 顯示成功
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('行程已刪除')),
           );
         }
       } catch (e) {
-        // 错误处理
+        // error 處理
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('刪除失敗: $e')),
@@ -458,28 +484,28 @@ class _CalendarPageState extends State<CalendarPage> {
             ),
           ),
           direction: DismissDirection.endToStart,
-          confirmDismiss: (direction) async {
-            return await showDialog<bool>(
-              context: context,
-              builder: (BuildContext context) {
-                return AlertDialog(
-                  title: const Text('確認刪除'),
-                  content: const Text('確定要刪除這個行程嗎？'),
-                  actions: <Widget>[
-                    TextButton(
-                      onPressed: () => Navigator.pop(context, false),
-                      child: const Text('取消'),
-                    ),
-                    TextButton(
-                      onPressed: () => Navigator.pop(context, true),
-                      child:
-                          const Text('刪除', style: TextStyle(color: Colors.red)),
-                    ),
-                  ],
-                );
-              },
-            );
-          },
+          // confirmDismiss: (direction) async {
+          //   return await showDialog<bool>(
+          //     context: context,
+          //     builder: (BuildContext context) {
+          //       return AlertDialog(
+          //         title: const Text('確認刪除'),
+          //         content: const Text('確定要刪除這個行程嗎？'),
+          //         actions: <Widget>[
+          //           TextButton(
+          //             onPressed: () => Navigator.pop(context, false),
+          //             child: const Text('取消'),
+          //           ),
+          //           TextButton(
+          //             onPressed: () => Navigator.pop(context, true),
+          //             child:
+          //                 const Text('刪除', style: TextStyle(color: Colors.red)),
+          //           ),
+          //         ],
+          //       );
+          //     },
+          //   );
+          // },
           onDismissed: (direction) {
             _deleteEvent(event);
           },
@@ -615,20 +641,23 @@ class _CalendarPageState extends State<CalendarPage> {
                       ),
                       direction: DismissDirection.endToStart,
                       confirmDismiss: (direction) async {
-                        return await showDialog<bool>(
+                        final confirmed = await showDialog<bool>(
                           context: context,
                           builder: (BuildContext context) {
                             return AlertDialog(
                               title: const Text('確認刪除'),
                               content: const Text('確定要刪除這個行程嗎？'),
-                              actions: <Widget>[
+                              actions: [
                                 TextButton(
                                   onPressed: () =>
                                       Navigator.pop(context, false),
                                   child: const Text('取消'),
                                 ),
                                 TextButton(
-                                  onPressed: () => Navigator.pop(context, true),
+                                  onPressed: () {
+                                    //_deleteEvent(event);
+                                    Navigator.pop(context, true);
+                                  },
                                   child: const Text('刪除',
                                       style: TextStyle(color: Colors.red)),
                                 ),
@@ -636,9 +665,13 @@ class _CalendarPageState extends State<CalendarPage> {
                             );
                           },
                         );
-                      },
-                      onDismissed: (direction) {
-                        _deleteEvent(event);
+
+                        if (confirmed == false) {
+                          await _loadEvents();
+                        } else {
+                          await _deleteEvent(event);
+                        }
+                        return false;
                       },
                       child: Card(
                         margin: const EdgeInsets.symmetric(
