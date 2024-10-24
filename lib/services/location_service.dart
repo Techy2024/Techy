@@ -25,7 +25,6 @@ class LocationService extends ChangeNotifier {
   void _startLocationTracking() async {
     bool isLocationServiceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!isLocationServiceEnabled) {
-      // 提示用戶啟用位置服務
       return;
     }
 

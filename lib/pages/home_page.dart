@@ -1,3 +1,5 @@
+import 'package:final_project/pages/calendar_page.dart';
+import 'package:final_project/pages/login_page.dart';
 import 'package:final_project/pages/test_page.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -10,16 +12,21 @@ class HomePage extends StatelessWidget {
   final user = FirebaseAuth.instance.currentUser!;
 
   // logout
-  void signUserOut(BuildContext context) {
+  void signUserOut() {
     FirebaseAuth.instance.signOut();
-    // 返回到登入頁面或其他地方，這裡假設返回到上一頁
-    Navigator.pop(context);
   }
 
-  void navigateToTestPage(BuildContext context) {
+  void navigateToClassifyPage(BuildContext context) {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => const TestPage()),
+      MaterialPageRoute(builder: (context) => TestPage()),
+    );
+  }
+
+  void navigateToCalendarPage(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => CalendarPage()),
     );
   }
 
@@ -77,8 +84,20 @@ class HomePage extends StatelessWidget {
             left: 20,
             right: 20,
             child: ElevatedButton(
-              onPressed: () => navigateToTestPage(context), // 跳轉到 TestPage
-              child: const Text('跳轉到測試頁面'),
+              onPressed: () =>
+                  navigateToClassifyPage(context), // 跳轉到 ClassifyPage
+              child: const Text('跳轉到分類頁面'),
+            ),
+          ),
+
+          Positioned(
+            bottom: 100,
+            left: 20,
+            right: 20,
+            child: ElevatedButton(
+              onPressed: () =>
+                  navigateToCalendarPage(context), // 跳轉到 CalendarPage
+              child: const Text('跳轉到行事曆模擬頁面'),
             ),
           ),
         ],
@@ -86,7 +105,7 @@ class HomePage extends StatelessWidget {
       appBar: AppBar(
         actions: [
           IconButton(
-            onPressed: () => signUserOut(context),
+            onPressed: signUserOut,
             icon: const Icon(Icons.logout),
           ),
         ],
