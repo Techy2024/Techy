@@ -1,6 +1,5 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_3d_controller/flutter_3d_controller.dart';
 import 'package:cloud_firestore/cloud_firestore.dart'; // 確保導入 Firestore 的包
 import 'HomePage.dart';
 

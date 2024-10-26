@@ -1,12 +1,13 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart'; 
 import 'package:speech_to_text/speech_to_text.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
 import '../api/ollama_llama3.dart'; 
 import 'Note.dart'; 
 import 'Calendar.dart';
 import 'Diary.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:provider/provider.dart';
+import '../services/location_service.dart'; 
 
 class HomePage extends StatefulWidget {
   @override
@@ -98,11 +99,25 @@ class _HomePageState extends State<HomePage> {
         });
       });
     }
+    final user = FirebaseAuth.instance.currentUser!;
+    void signUserOut() {
+      FirebaseAuth.instance.signOut();
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    final locationService = Provider.of<LocationService>(context);
     return CupertinoPageScaffold(
+      navigationBar: CupertinoNavigationBar(
+        middle: const Text('Home'), // 設置導航欄標題
+        trailing: IconButton(
+          icon: const Icon(CupertinoIcons.share),
+          onPressed: () {
+            FirebaseAuth.instance.signOut(); // 登出
+          },
+        ),
+      ),
       child: Container(
         decoration: BoxDecoration(
           image: DecorationImage(
@@ -220,7 +235,23 @@ class _HomePageState extends State<HomePage> {
                 ),
               ),
             ),
-
+            Positioned(
+            top: 100,
+            left: 20,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  '當前位置:',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+                Text(
+                  locationService.location,
+                  style: const TextStyle(fontSize: 16),
+                ),
+              ],
+            ),
+          ),
             // 底部输入框和发送按钮
             Align(
               alignment: Alignment.bottomCenter,
