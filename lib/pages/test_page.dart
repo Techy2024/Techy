@@ -1,9 +1,29 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-class TestPage extends StatelessWidget {
-  final CollectionReference listCollection =
-      FirebaseFirestore.instance.collection('List'); // 連接到 Firestore Collection
+class TestPage extends StatefulWidget {
+  @override
+  _TestPageState createState() => _TestPageState();
+}
+
+class _TestPageState extends State<TestPage> {
+  User? currentUser;
+  CollectionReference? listCollection;
+
+  @override
+  void initState() {
+    super.initState();
+    currentUser = FirebaseAuth.instance.currentUser;
+
+    if (currentUser != null) {
+      String uid = currentUser!.uid;
+      listCollection = FirebaseFirestore.instance
+          .collection('UserID')
+          .doc(uid)
+          .collection('List');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -13,7 +33,9 @@ class TestPage extends StatelessWidget {
       ),
       body: Center(
         child: ElevatedButton(
-          onPressed: () => updateTags(context), // 傳入 context
+          onPressed: currentUser != null
+              ? () => updateTags(context)
+              : null, // 若未登入則停用按鈕
           child: Text('分類並新增 Tag'),
         ),
       ),
@@ -23,8 +45,12 @@ class TestPage extends StatelessWidget {
   // 更新每筆資料的 tag 欄位
   Future<void> updateTags(BuildContext context) async {
     try {
+      if (listCollection == null) {
+        throw Exception('尚未取得使用者資料');
+      }
+
       // 取得 List collection 中的所有資料
-      QuerySnapshot snapshot = await listCollection.get();
+      QuerySnapshot snapshot = await listCollection!.get();
 
       for (var doc in snapshot.docs) {
         var data = doc.data() as Map<String, dynamic>?;
@@ -33,7 +59,7 @@ class TestPage extends StatelessWidget {
 
         // 如果 tag 已經存在則略過更新
         if (tag != null) {
-          print('跳過 ${doc.id},tag 已存在');
+          print('跳過 ${doc.id}, tag 已存在');
           continue;
         }
 
@@ -55,24 +81,22 @@ class TestPage extends StatelessWidget {
 
   // 顯示結果對話框
   void _showDialog(BuildContext context, String title, String message) {
-    if (context != null) {
-      showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            title: Text(title),
-            content: Text(message),
-            actions: <Widget>[
-              TextButton(
-                child: Text('確定'),
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
-              ),
-            ],
-          );
-        },
-      );
-    }
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(title),
+          content: Text(message),
+          actions: <Widget>[
+            TextButton(
+              child: Text('確定'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
 }

@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:intl/intl.dart';
@@ -293,66 +294,84 @@ class _CalendarPageState extends State<CalendarPage> {
       ),
     );
 
-    if (newEvent != null) {
-      try {
-        // 1. 將新事件與當日現有事件合併
-        final allEvents = [...existingEvents, newEvent];
+    User? currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser != null) {
+      String uid = currentUser.uid;
 
-        // 2. 解決時間衝突
-        final resolvedEvents = TimeSlotResolver.resolveTimeConflicts(allEvents);
+      if (newEvent != null) {
+        try {
+          // 1. 將新事件與當日現有事件合併
+          final allEvents = [...existingEvents, newEvent];
 
-        // 3. 準備批次更新
-        final batch = FirebaseFirestore.instance.batch();
+          // 2. 解決時間衝突
+          final resolvedEvents =
+              TimeSlotResolver.resolveTimeConflicts(allEvents);
 
-        // 4. 處理每個事件
-        for (var event in resolvedEvents) {
-          if (event.id != null) {
-            // 更新現有事件（若時間被調整）
-            final docRef =
-                FirebaseFirestore.instance.collection('List').doc(event.id);
-            batch.update(docRef, {
-              'name': event.name,
-              'start_time': event.startTime,
-              'end_time': event.endTime,
-              'location': event.location,
-              'tag': 1,
-            });
-          } else {
-            // 新增事件到資料庫
-            final docRef = FirebaseFirestore.instance.collection('List').doc();
-            batch.set(docRef, {
-              'name': event.name,
-              'start_time': event.startTime,
-              'end_time': event.endTime,
-              'location': event.location,
-              'date': DateFormat('yyyy/MM/dd').format(selectedDate),
-              'tag': 1,
-            });
+          // 3. 準備批次更新
+          final batch = FirebaseFirestore.instance.batch();
+
+          // 4. 處理每個事件
+          for (var event in resolvedEvents) {
+            if (event.id != null) {
+              // 更新現有事件（若時間被調整）
+              final docRef = FirebaseFirestore.instance
+                  .collection('UserID')
+                  .doc(uid)
+                  .collection('List')
+                  .doc(event.id);
+
+              batch.update(docRef, {
+                'name': event.name,
+                'start_time': event.startTime,
+                'end_time': event.endTime,
+                'location': event.location,
+                'tag': 1,
+              });
+            } else {
+              // 新增事件到資料庫
+              final docRef = FirebaseFirestore.instance
+                  .collection('UserID')
+                  .doc(uid)
+                  .collection('List')
+                  .doc();
+              batch.set(docRef, {
+                'name': event.name,
+                'start_time': event.startTime,
+                'end_time': event.endTime,
+                'location': event.location,
+                'date': DateFormat('yyyy/MM/dd').format(selectedDate),
+                'tag': 1,
+              });
+            }
           }
-        }
 
-        await batch.commit();
-        await _loadEvents();
+          await batch.commit();
+          await _loadEvents();
 
-        // 顯示成功訊息
-        if (resolvedEvents.length > existingEvents.length) {
+          // 顯示成功訊息
+          if (resolvedEvents.length > existingEvents.length) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('行程已新增')),
+            );
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('行程已新增，部分時間已自動調整以避免衝突')),
+            );
+          }
+        } catch (e) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('行程已新增')),
-          );
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('行程已新增，部分時間已自動調整以避免衝突')),
+            SnackBar(content: Text('新增行程失敗: $e')),
           );
         }
-      } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('新增行程失敗: $e')),
-        );
       }
     }
   }
 
   Future<void> _deleteEvent(Event event) async {
+    User? currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser == null) return;
+    String uid = currentUser.uid;
+
     // 顯示確認的對話框
     final bool? confirm = await showDialog<bool>(
       context: context,
@@ -379,6 +398,8 @@ class _CalendarPageState extends State<CalendarPage> {
       try {
         // 從 firebase 上刪除資料
         await FirebaseFirestore.instance
+            .collection('UserID')
+            .doc(uid)
             .collection('List')
             .doc(event.id)
             .delete();
@@ -405,7 +426,13 @@ class _CalendarPageState extends State<CalendarPage> {
 
   Future<void> _loadEvents() async {
     try {
+      User? currentUser = FirebaseAuth.instance.currentUser;
+      if (currentUser == null) return;
+
+      String uid = currentUser.uid;
       final QuerySnapshot snapshot = await FirebaseFirestore.instance
+          .collection('UserID')
+          .doc(uid)
           .collection('List')
           .where('tag', isEqualTo: 1)
           .get();
@@ -572,133 +599,189 @@ class _CalendarPageState extends State<CalendarPage> {
         onPressed: _addEvent,
         child: const Icon(Icons.add),
       ),
-      body: Column(
+      body: Stack(
         children: [
-          TableCalendar<Event>(
-            locale: 'zh_TW',
-            firstDay: DateTime.utc(2024, 1, 1),
-            lastDay: DateTime.utc(2024, 12, 31),
-            focusedDay: _focusedDay,
-            calendarFormat: _calendarFormat,
-            selectedDayPredicate: (day) {
-              return isSameDay(_selectedDay, day);
-            },
-            onDaySelected: (selectedDay, focusedDay) {
-              setState(() {
-                _selectedDay = selectedDay;
-                _focusedDay = focusedDay;
-              });
-            },
-            onFormatChanged: (format) {
-              setState(() {
-                _calendarFormat = format;
-              });
-            },
-            eventLoader: _getEventsForDay,
-            calendarStyle: const CalendarStyle(
-              markersMaxCount: 1,
-              markerDecoration: BoxDecoration(
-                color: Colors.blue,
-                shape: BoxShape.circle,
-              ),
-              selectedDecoration: BoxDecoration(
-                color: Colors.blue,
-                shape: BoxShape.circle,
-              ),
-              todayDecoration: BoxDecoration(
-                color: Colors.orange,
-                shape: BoxShape.circle,
-              ),
+          Positioned.fill(
+            child: Image.asset(
+              'lib/assets/image/Calendar.png',
+              fit: BoxFit.cover,
             ),
           ),
-          const SizedBox(height: 8.0),
-          Expanded(
-            child: Builder(
-              builder: (context) {
-                final selectedDate = _selectedDay ?? _focusedDay;
-                final events = _getEventsForDay(selectedDate);
+          Column(
+            children: [
+              const SizedBox(height: 165),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 65),
+                child: TableCalendar<Event>(
+                  locale: 'zh_TW',
+                  firstDay: DateTime.utc(2024, 1, 1),
+                  lastDay: DateTime.utc(2024, 12, 31),
+                  focusedDay: _focusedDay,
+                  calendarFormat: _calendarFormat,
+                  selectedDayPredicate: (day) {
+                    return isSameDay(_selectedDay, day);
+                  },
+                  onDaySelected: (selectedDay, focusedDay) {
+                    setState(() {
+                      _selectedDay = selectedDay;
+                      _focusedDay = focusedDay;
+                    });
+                  },
+                  onFormatChanged: (format) {
+                    setState(() {
+                      _calendarFormat = format;
+                    });
+                  },
+                  eventLoader: _getEventsForDay,
+                  calendarStyle: const CalendarStyle(
+                    markersMaxCount: 1,
+                    markerDecoration: BoxDecoration(
+                      color: Colors.blue,
+                      shape: BoxShape.circle,
+                    ),
+                    todayTextStyle: TextStyle(
+                      fontFamily: '851Tegaki',
+                      color: Colors.black,
+                    ),
+                    selectedTextStyle: TextStyle(
+                      fontFamily: '851Tegaki',
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                    defaultTextStyle: TextStyle(
+                      fontFamily: '851Tegaki',
+                      color: Colors.black,
+                    ),
+                    todayDecoration: BoxDecoration(
+                      color: Color.fromARGB(255, 222, 170, 93),
+                      shape: BoxShape.circle,
+                    ),
+                    selectedDecoration: BoxDecoration(
+                      color: Color.fromARGB(255, 180, 154, 222),
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                  headerStyle: HeaderStyle(
+                    formatButtonVisible: false,
+                    titleCentered: true,
+                    leftChevronIcon: Icon(
+                      Icons.chevron_left,
+                      color: Color.fromARGB(255, 66, 66, 66),
+                    ),
+                    rightChevronIcon: Icon(
+                      Icons.chevron_right,
+                      color: Color.fromARGB(255, 66, 66, 66),
+                    ),
+                    titleTextStyle: TextStyle(
+                      fontFamily: '851Tegaki',
+                      fontSize: 20,
+                    ),
+                  ),
+                  daysOfWeekStyle: DaysOfWeekStyle(
+                    weekdayStyle: TextStyle(
+                      fontFamily: '851Tegaki',
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black,
+                    ),
+                    weekendStyle: TextStyle(
+                      fontFamily: '851Tegaki',
+                      fontWeight: FontWeight.bold,
+                      color: Color.fromARGB(255, 162, 12, 2),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8.0),
+              Expanded(
+                child: Builder(
+                  builder: (context) {
+                    final selectedDate = _selectedDay ?? _focusedDay;
+                    final events = _getEventsForDay(selectedDate);
 
-                if (events.isEmpty) {
-                  return const Center(
-                    child: Text('今日無行程'),
-                  );
-                }
+                    if (events.isEmpty) {
+                      return const Center(
+                        child: Text('今日無行程'),
+                      );
+                    }
 
-                return ListView.builder(
-                  itemCount: events.length,
-                  itemBuilder: (context, index) {
-                    final event = events[index];
-                    return Dismissible(
-                      key: Key(event.id ?? '${event.name}_${event.startTime}'),
-                      background: Container(
-                        color: Colors.red,
-                        alignment: Alignment.centerRight,
-                        padding: const EdgeInsets.only(right: 20.0),
-                        child: const Icon(
-                          Icons.delete,
-                          color: Colors.white,
-                        ),
-                      ),
-                      direction: DismissDirection.endToStart,
-                      confirmDismiss: (direction) async {
-                        final confirmed = await showDialog<bool>(
-                          context: context,
-                          builder: (BuildContext context) {
-                            return AlertDialog(
-                              title: const Text('確認刪除'),
-                              content: const Text('確定要刪除這個行程嗎？'),
-                              actions: [
-                                TextButton(
-                                  onPressed: () =>
-                                      Navigator.pop(context, false),
-                                  child: const Text('取消'),
-                                ),
-                                TextButton(
-                                  onPressed: () {
-                                    //_deleteEvent(event);
-                                    Navigator.pop(context, true);
-                                  },
-                                  child: const Text('刪除',
-                                      style: TextStyle(color: Colors.red)),
-                                ),
-                              ],
-                            );
-                          },
-                        );
-
-                        if (confirmed == false) {
-                          await _loadEvents();
-                        } else {
-                          await _deleteEvent(event);
-                        }
-                        return false;
-                      },
-                      child: Card(
-                        margin: const EdgeInsets.symmetric(
-                          horizontal: 12.0,
-                          vertical: 4.0,
-                        ),
-                        child: ListTile(
-                          title: Text(
-                            event.name,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
+                    return ListView.builder(
+                      itemCount: events.length,
+                      itemBuilder: (context, index) {
+                        final event = events[index];
+                        return Dismissible(
+                          key: Key(
+                              event.id ?? '${event.name}_${event.startTime}'),
+                          background: Container(
+                            color: Colors.red,
+                            alignment: Alignment.centerRight,
+                            padding: const EdgeInsets.only(right: 20.0),
+                            child: const Icon(
+                              Icons.delete,
+                              color: Colors.white,
                             ),
                           ),
-                          subtitle: Text(
-                            '時間: ${event.startTime} - ${event.endTime}\n地點: ${event.location}',
+                          direction: DismissDirection.endToStart,
+                          confirmDismiss: (direction) async {
+                            final confirmed = await showDialog<bool>(
+                              context: context,
+                              builder: (BuildContext context) {
+                                return AlertDialog(
+                                  title: const Text('確認刪除'),
+                                  content: const Text('確定要刪除這個行程嗎？'),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () =>
+                                          Navigator.pop(context, false),
+                                      child: const Text('取消'),
+                                    ),
+                                    TextButton(
+                                      onPressed: () {
+                                        Navigator.pop(context, true);
+                                      },
+                                      child: const Text('刪除',
+                                          style: TextStyle(color: Colors.red)),
+                                    ),
+                                  ],
+                                );
+                              },
+                            );
+
+                            if (confirmed == false) {
+                              await _loadEvents();
+                            } else {
+                              await _deleteEvent(event);
+                            }
+                            return false;
+                          },
+                          child: Card(
+                            margin: const EdgeInsets.symmetric(
+                              horizontal: 12.0,
+                              vertical: 4.0,
+                            ),
+                            child: ListTile(
+                              title: Text(
+                                event.name,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              subtitle: Text(
+                                '時間: ${event.startTime} - ${event.endTime}\n地點: ${event.location}',
+                              ),
+                              trailing: IconButton(
+                                icon:
+                                    const Icon(Icons.delete, color: Colors.red),
+                                onPressed: () => _deleteEvent(event),
+                              ),
+                            ),
                           ),
-                          trailing: IconButton(
-                            icon: const Icon(Icons.delete, color: Colors.red),
-                            onPressed: () => _deleteEvent(event),
-                          ),
-                        ),
-                      ),
+                        );
+                      },
                     );
                   },
-                );
-              },
-            ),
+                ),
+              ),
+            ],
           ),
         ],
       ),
