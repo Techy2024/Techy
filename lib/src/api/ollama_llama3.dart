@@ -4,31 +4,67 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 
 class OllamaApiService {
-
   OllamaApiService();
 
-  // 儲存事件資料到 Firestore
-  Future<void> saveEventToFirestore(String? date, String? startTime, String? endTime, String? name, String? location) async {
+  // 儲存事件資料到 Firestore，並設定 documentID 為有序列的數字
+  Future<void> saveEventToFirestore(
+      String? date, String? startTime, String? endTime, String? name, String? location, int tag) async {
     FirebaseFirestore firestore = FirebaseFirestore.instance;
+
+    // 獲取目前的最大 documentID
+    final querySnapshot = await firestore.collection('List').orderBy(FieldPath.documentId).get();
+    int newDocId = 1; // 預設值為 1
+
+    if (querySnapshot.docs.isNotEmpty) {
+      final lastDocId = int.parse(querySnapshot.docs.last.id);
+      newDocId = lastDocId + 1; // 新 documentID 為最後一個 documentID 加 1
+    }
 
     Map<String, dynamic> eventData = {
       'date': date ?? "null",
       'start_time': startTime ?? "null",
       'end_time': endTime ?? "null",
       'name': name ?? "null",
-      'location': location ?? "null"
+      'location': location ?? "null",
+      'tag': tag,
     };
 
     try {
-      await firestore.collection('List').add(eventData);  // 儲存到 List collection
-      print("事件已成功儲存到 Firebase Firestore");
+      await firestore.collection('List').doc(newDocId.toString()).set(eventData); // 儲存到 List collection，使用新的 documentID
+      print("事件已成功儲存到 Firebase Firestore，documentID: $newDocId");
     } catch (e) {
       print("儲存事件時發生錯誤: $e");
     }
   }
 
-  Future<String?> generateText(String content) async {
+  // 儲存聊天記錄到 Firestore，並設定 documentID 為有序列的數字
+  Future<void> saveChatToFirestore(String ask, String reply) async {
+    FirebaseFirestore firestore = FirebaseFirestore.instance;
 
+    // 獲取目前的最大 documentID
+    final querySnapshot = await firestore.collection('Chat').orderBy(FieldPath.documentId).get();
+    int newDocId = 1; // 預設值為 1
+
+    if (querySnapshot.docs.isNotEmpty) {
+      final lastDocId = int.parse(querySnapshot.docs.last.id);
+      newDocId = lastDocId + 1; // 新 documentID 為最後一個 documentID 加 1
+    }
+
+    Map<String, dynamic> chatData = {
+      'ask': ask,
+      'reply': reply,
+      'timestamp': FieldValue.serverTimestamp(), // 儲存時間戳
+    };
+
+    try {
+      await firestore.collection('Chat').doc(newDocId.toString()).set(chatData); // 儲存到 Chat collection，使用新的 documentID
+      print("聊天記錄已成功儲存到 Firebase Firestore，documentID: $newDocId");
+    } catch (e) {
+      print("儲存聊天記錄時發生錯誤: $e");
+    }
+  }
+
+  Future<String?> generateText(String text) async {
     final url = Uri.parse('http://192.168.56.1:11434/api/chat');
     // 準備要傳遞的資料
     var date = DateTime.now();
@@ -39,19 +75,20 @@ class OllamaApiService {
     final body = jsonEncode({
       "model": "llama3.1:techy",
       // "model": "taide",
-        "messages": [
+      "messages": [
         {
           "role": "user",
-          "content": '''今天的日期是$date，$day，$content''',
+          "content": '''今天的日期是$date，$day。使用者傳入的訊息是:$text''',
         }
       ],
       "stream": false,
     });
+
     try {
       final response = await http.post(
-          url,
-          body: body,
-        );
+        url,
+        body: body,
+      );
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -60,7 +97,7 @@ class OllamaApiService {
 
         final content = data['message']['content'];
 
-        // 判斷資料是否為 type=1 或 type=2
+        // 判斷資料是否為 type=1 
         if (content.contains('type=1')) {
           // 使用彈性的方式解析每個欄位，不依賴固定格式
           String? date;
@@ -75,7 +112,7 @@ class OllamaApiService {
             date = dateMatch.group(1);
           }
 
-         // 更彈性的時間格式匹配，允許1或2位數的時間
+          // 更彈性的時間格式匹配，允許1或2位數的時間
           final startTimeMatch = RegExp(r'start_time=([0-9]{1,2}:[0-9]{1,2}(?::[0-9]{1,2})?)').firstMatch(content);
           if (startTimeMatch != null) {
             startTime = startTimeMatch.group(1);
@@ -85,7 +122,6 @@ class OllamaApiService {
           if (endTimeMatch != null) {
             endTime = endTimeMatch.group(1);
           }
-
 
           final nameMatch = RegExp(r'name=([^,]+)').firstMatch(content);
           if (nameMatch != null) {
@@ -103,98 +139,69 @@ class OllamaApiService {
           print('結束時間 = ${endTime ?? "null"}');
           print('事件名稱 = ${name ?? "null"}');
           print('地點 = ${location ?? "null"}');
-          await saveEventToFirestore(date, startTime, endTime, name, location);
 
-          // 最後回傳聊天回應，去除可能的引號
+          // 設置 tag 的值
+          int tag = (startTime == null && endTime == null) ? 1 : 2;
+
+          // 保存事件到 Firestore，包括 tag
+          await saveEventToFirestore(date, startTime, endTime, name, location, tag);
+
           // 嘗試匹配有 chatResponse 的情況
           final chatResponseMatch = RegExp(r'chatResponse="?(.+?)"?$').firstMatch(content);
           if (chatResponseMatch != null) {
             // 提取去除引號後的聊天回應
             String chatResponse = chatResponseMatch.group(1)!;
+
+            // 儲存聊天記錄到 Firestore
+            await saveChatToFirestore(text, chatResponse);
+
             return chatResponse;
           } else {
             // 沒有 chatResponse，直接返回剩下的字串
-            // 找出最後的「.」以分隔結束符和聊天回應
             final separatorIndex = content.lastIndexOf('.');
             if (separatorIndex != -1 && separatorIndex + 1 < content.length) {
               String possibleResponse = content.substring(separatorIndex + 1).trim();
+
+              // 儲存聊天記錄到 Firestore
+              await saveChatToFirestore(text, possibleResponse);
+
               return possibleResponse;
             }
-            // 如果找不到「.」，返回整個內容作為回應
+            // 儲存聊天記錄到 Firestore
+            await saveChatToFirestore(text, content.trim());
+
             return content.trim();
           }
-
-        } 
-        else if (content.contains('type=2')) {
+        } else {
           // 如果是 type=2，直接提取聊天回應，去除可能的引號
-          // 嘗試匹配有 chatResponse 的情況
           final chatResponseMatch = RegExp(r'chatResponse="?(.+?)"?$').firstMatch(content);
           if (chatResponseMatch != null) {
-            // 提取去除引號後的聊天回應
             String chatResponse = chatResponseMatch.group(1)!;
+
+            // 儲存聊天記錄到 Firestore
+            await saveChatToFirestore(text, chatResponse);
+
             return chatResponse;
           } else {
-            // 沒有 chatResponse，直接返回剩下的字串
-            // 找出最後的「.」以分隔結束符和聊天回應
             final separatorIndex = content.lastIndexOf('.');
             if (separatorIndex != -1 && separatorIndex + 1 < content.length) {
               String possibleResponse = content.substring(separatorIndex + 1).trim();
+
+              // 儲存聊天記錄到 Firestore
+              await saveChatToFirestore(text, possibleResponse);
+              
               return possibleResponse;
             }
-            // 如果找不到「.」，返回整個內容作為回應
+
+            // 儲存聊天記錄到 Firestore
+            await saveChatToFirestore(text, content.trim());
+
             return content.trim();
           }
         }
-        else {
-          print("Failed to get response from API: ${response.statusCode}");
-          return null;
-        }
-      } 
-    }catch (e) {
-      print('發生錯誤: $e');
-      return null;
-    }
-  }
-
-  Future<String?> recordEvent(String content) async {
-    final url = Uri.parse('http://192.168.56.1:11434/api/chat');
-    var date = DateTime.now();
-    var day = DateFormat('EEEE').format(date);
-    print(DateTime.now());
-    print(DateFormat('EEEE').format(date));
-    // 準備要傳遞的資料;
-    final body = jsonEncode({
-      "model": "llama3.1:techy",
-      // "model": "taide",
-      "messages": [
-        {
-          "role": "user",
-          "content": '''今天的日期是$date，$day，$content''',
-        }
-      ],
-      "stream": false,
-    });
-
-
-    try {
-      final response = await http.post(
-        url,
-        body: body,
-        headers: {"Content-Type": "application/json"},
-      );
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-            print('現在時間: ${DateTime.now()}');
-        print('API呼叫成功: $data');
-        print("回應: ${data['message']['content']}");
-        return data['message']['content'];
-      } else {
-        print("Failed to get response from API: ${response.statusCode}");
-        return null;
       }
     } catch (e) {
-      print("這是Error: $e");
+      print('發生錯誤: $e');
       return null;
     }
   }

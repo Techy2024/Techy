@@ -14,6 +14,7 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  String type = 'ENFJ'; // 定義 GIF 類型的變數
   String _gifPath = 'assets/gif/ENFJ/shake_head.gif';
   final TextEditingController _controller = TextEditingController();
   String? _apiResponse; // API 的回應
@@ -23,7 +24,7 @@ class _HomePageState extends State<HomePage> {
   String _wordsSpoken = "";
   double _confidenceLevel = 0.0;
 
-    @override
+  @override
   void initState() {
     super.initState();
     initSpeech();
@@ -42,10 +43,11 @@ class _HomePageState extends State<HomePage> {
       localeId: 'zh_CN', // 中文
     );
     setState(() {
-      _gifPath = 'assets/gif/ENFJ/wave_hand.gif';
+      _gifPath = 'assets/gif/$type/wave_hand.gif'; // 使用變數 type
       _confidenceLevel = 0;
     });
   }
+
   void _stopListening() async {
     print('stop...');
     await _speechToText.stop();
@@ -58,11 +60,10 @@ class _HomePageState extends State<HomePage> {
 
     // 异步调用记录事件的方法
     print("Recognized words before API call: $recognizedWords");
-    final event = await apiService.recordEvent(recognizedWords);
+    final event = await apiService.generateText(recognizedWords);
     setState(() {
-      _gifPath = 'assets/gif/ENFJ/shake_head.gif';
+      _gifPath = 'assets/gif/$type/shake_head.gif'; // 使用變數 type
     });
-
   }
 
   void _onSpeechResult(result) async {
@@ -85,8 +86,7 @@ class _HomePageState extends State<HomePage> {
       final response = await apiService.generateText(message);
       setState(() {
         _apiResponse = response; // 直接將 API 返回的內容設置為回應
-        // print('_apiResponse: $_apiResponse');
-        _gifPath = 'assets/gif/ENFJ/jump.gif'; // 更改 GIF 路徑
+        _gifPath = 'assets/gif/$type/jump.gif'; // 使用變數 type
       });
       _controller.clear(); // 发送后清空输入框
 
@@ -94,7 +94,7 @@ class _HomePageState extends State<HomePage> {
       Future.delayed(Duration(seconds: 5), () {
         setState(() {
           _apiResponse = null;
-          _gifPath = 'assets/gif/ENFJ/shake_head.gif'; // 恢复原始 GIF 路径
+          _gifPath = 'assets/gif/$type/shake_head.gif'; // 使用變數 type
         });
       });
     }
@@ -103,7 +103,6 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return CupertinoPageScaffold(
-
       child: Container(
         decoration: BoxDecoration(
           image: DecorationImage(
@@ -209,7 +208,6 @@ class _HomePageState extends State<HomePage> {
                     context,
                     CupertinoPageRoute(builder: (context) => DiaryPage()), 
                   );
-
                 },
                 child: SizedBox(
                   width: 90, // 設定寬度
@@ -222,7 +220,6 @@ class _HomePageState extends State<HomePage> {
                 ),
               ),
             ),
-
 
             // 底部输入框和发送按钮
             Align(
@@ -243,7 +240,6 @@ class _HomePageState extends State<HomePage> {
                           color: const Color.fromARGB(255, 194, 194, 194).withOpacity(0.8), // 設置底色
                           borderRadius: BorderRadius.circular(10.0), // 圓角
                         ),
-                        
                         child: CupertinoTextField(
                           controller: _controller,
                           placeholder: "Type a message",
@@ -270,6 +266,7 @@ class _HomePageState extends State<HomePage> {
       ),
     );
   }
+
   void _navigateToNewPage(BuildContext context, String pageName) {
     Navigator.push(
       context,

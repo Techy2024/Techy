@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_3d_controller/flutter_3d_controller.dart';
+import 'package:cloud_firestore/cloud_firestore.dart'; // 確保導入 Firestore 的包
 import 'HomePage.dart';
 
 class CubeMenuPage extends StatefulWidget {
@@ -10,14 +11,20 @@ class CubeMenuPage extends StatefulWidget {
 
 class _CubeMenuPageState extends State<CubeMenuPage> {
   PageController _pageController = PageController();
-
-  // 替換為 GIF 文件
+  
+  // 更新您的 GIF 文件列表以匹配所需的名稱
   List<String> gifAssets = [
     'assets/gif/INTJ/wave_hand.gif',
     'assets/gif/ISTP/wave_hand.gif',
     'assets/gif/ENFJ/wave_hand.gif',
     'assets/gif/ESFP/wave_hand.gif',
+  ];
 
+  List<String> characterNames = [
+    'INTJ',
+    'ISTP',
+    'ENFJ',
+    'ESFP',
   ];
 
   List<Color> backgroundColors = [
@@ -46,6 +53,15 @@ class _CubeMenuPageState extends State<CubeMenuPage> {
     }
   }
 
+  Future<void> saveCharacterToFirestore(String characterName) async {
+    FirebaseFirestore firestore = FirebaseFirestore.instance;
+
+    // 儲存到 "User_Info" 集合
+    await firestore.collection('Users_Info').add({
+      'techy_type': characterName, // 儲存選中的角色名稱
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -60,7 +76,10 @@ class _CubeMenuPageState extends State<CubeMenuPage> {
                   gifAsset: gifAssets[index], // 使用 GIF 文件
                   backgroundColor: backgroundColors[index],
                   characterInfo: characterInfos[index],
-                  onButtonPressed: () {
+                  onButtonPressed: () async {
+                    // 在這裡儲存角色到 Firestore
+                    await saveCharacterToFirestore(characterNames[index]);
+                    // 導航到 HomePage
                     Navigator.push(
                       context,
                       CupertinoPageRoute(builder: (context) => HomePage()),
@@ -102,7 +121,6 @@ class _CubeMenuPageState extends State<CubeMenuPage> {
   }
 }
 
-
 class CubePage extends StatelessWidget {
   final String gifAsset;
   final Color backgroundColor;
@@ -134,7 +152,7 @@ class CubePage extends StatelessWidget {
                 fit: BoxFit.cover, // 設置適合的顯示方式
               ),
             ),
-            SizedBox(height: 40), 
+            SizedBox(height: 40),
             Padding(
               padding: const EdgeInsets.all(8.0),
               child: Text(
@@ -142,7 +160,7 @@ class CubePage extends StatelessWidget {
                 style: TextStyle(fontSize: 14, color: Colors.black),
               ),
             ),
-            SizedBox(height: 40), 
+            SizedBox(height: 40),
             Positioned(
               top: 100,
               left: 0,
