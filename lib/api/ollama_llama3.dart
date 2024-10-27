@@ -93,7 +93,7 @@ class OllamaApiService {
 
   Future<String?> generateText(String text) async {
     //final url = Uri.parse('http://192.168.56.1:11434/api/chat');
-    final url = Uri.parse('http://127.0.0.1:11434/api/chat');
+    final url = Uri.parse('http://localhost:11434/api/chat');
     // 準備要傳遞的資料
     var date = DateTime.now();
     var day = DateFormat('EEEE').format(date);

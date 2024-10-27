@@ -8,9 +8,10 @@ import 'package:final_project/pages/test_page.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
-import 'package:final_project/services/location_service.dart';
-import 'package:speech_to_text/speech_to_text.dart'; // 引入 LocationService
+import 'package:final_project/services/location_service.dart'; // 引入 LocationService
+import 'package:speech_to_text/speech_to_text.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -65,30 +66,40 @@ class _HomePageState extends State<HomePage> {
     initSpeech();
   }
 
-  void initSpeech() async {
+  Future<void> initSpeech() async {
+    var status = await Permission.microphone.request();
+    if (status != PermissionStatus.granted) {
+      print('麥克風權限未授權');
+      return; // 若無權限則返回
+    }
+
     _speechEnabled = await _speechToText.initialize(
-      onError: (error) => print('SpeechToText Error: $error'), // 錯誤處理
+      onError: (error) => print('SpeechToText Error: $error'),
     );
-    print('init: $_speechEnabled');
-    setState(() {}); // 更新狀態，顯示初始化結果
+
+    if (!_speechEnabled) {
+      print('SpeechToText 初始化失敗');
+    } else {
+      print('SpeechToText 初始化成功');
+    }
+    setState(() {}); // 更新狀態
   }
 
   void _startListening() async {
-    if (!_speechEnabled) {
-      print('SpeechToText 未初始化或初始化失敗。');
-      return;
+    if (_speechEnabled) {
+      // 確認初始化成功後才開始聆聽
+      print('start...');
+      await _speechToText.listen(
+        onResult: _onSpeechResult,
+        localeId: 'zh_CN', // 中文
+      );
+      setState(() {
+        _gifPath = 'lib/assets/gif/$type/wave_hand.gif';
+        _confidenceLevel = 0;
+      });
+    } else {
+      print('SpeechToText 尚未初始化');
     }
-
-    print('start...');
-    await _speechToText.listen(
-      onResult: _onSpeechResult,
-      localeId: 'zh_CN', // 中文
-    );
-
-    setState(() {
-      _gifPath = 'lib/assets/gif/$type/wave_hand.gif'; // 使用變數 type
-      _confidenceLevel = 0;
-    });
   }
 
   void _stopListening() async {
