@@ -167,7 +167,9 @@ class _AddEventDialogState extends State<AddEventDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('新增行程'),
+      title: const Text(
+        '新增行程',
+        style: TextStyle(fontSize: 16),textAlign: TextAlign.center, ),
       content: Form(
         key: _formKey,
         child: SingleChildScrollView(
@@ -176,7 +178,7 @@ class _AddEventDialogState extends State<AddEventDialog> {
             children: [
               TextFormField(
                 controller: _nameController,
-                decoration: const InputDecoration(labelText: '行程名稱'),
+                decoration: const InputDecoration(labelText: '行程名稱',labelStyle: TextStyle(fontSize: 14),),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return '請輸入行程名稱';
@@ -186,7 +188,7 @@ class _AddEventDialogState extends State<AddEventDialog> {
               ),
               TextFormField(
                 controller: _locationController,
-                decoration: const InputDecoration(labelText: '地點'),
+                decoration: const InputDecoration(labelText: '地點', labelStyle: TextStyle(fontSize: 14),),
               ),
               const SizedBox(height: 16),
               Row(
@@ -194,13 +196,17 @@ class _AddEventDialogState extends State<AddEventDialog> {
                   Expanded(
                     child: TextButton(
                       onPressed: _selectStartTime,
-                      child: Text('開始時間: ${_startTime.format(context)}'),
+                      child: Text(
+                        '開始: ${_startTime.format(context)}',
+                        style: TextStyle(fontSize: 14,color: const Color.fromARGB(255, 196, 98, 0),),),
                     ),
                   ),
                   Expanded(
                     child: TextButton(
                       onPressed: _selectEndTime,
-                      child: Text('結束時間: ${_endTime.format(context)}'),
+                      child: Text(
+                        '結束: ${_endTime.format(context)}',
+                        style: TextStyle(fontSize: 14,color: const Color.fromARGB(255, 196, 98, 0),),),
                     ),
                   ),
                 ],
@@ -220,7 +226,9 @@ class _AddEventDialogState extends State<AddEventDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('取消'),
+          child: const Text(
+            '取消',
+            style: TextStyle(fontSize: 14,color: Color.fromARGB(255, 108, 108, 108),),),
         ),
         TextButton(
           onPressed: () {
@@ -242,7 +250,10 @@ class _AddEventDialogState extends State<AddEventDialog> {
               });
             }
           },
-          child: const Text('確定'),
+          child: const Text(
+            '確定',
+            style: TextStyle(fontSize: 14,color: Color.fromARGB(255, 108, 108, 108),),
+            ),
         ),
       ],
     );
@@ -573,215 +584,214 @@ class _CalendarPageState extends State<CalendarPage> {
     }
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('行事曆'),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.pop(context),
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: () {
-              setState(() {
-                _isLoading = true;
-              });
-              _loadEvents().then((_) {
-                setState(() {
-                  _isLoading = false;
-                });
-              });
-            },
-          ),
-        ],
-      ),
       floatingActionButton: FloatingActionButton(
         onPressed: _addEvent,
         child: const Icon(Icons.add),
+        backgroundColor: const Color.fromARGB(0, 255, 255, 255),
+        elevation: 0,
+        // foregroundColor: const Color.fromARGB(255, 0, 0, 0),
       ),
       body: Stack(
         children: [
+          // 設定背景圖
           Positioned.fill(
             child: Image.asset(
               'lib/assets/image/Calendar.png',
               fit: BoxFit.cover,
             ),
           ),
-          Column(
-            children: [
-              const SizedBox(height: 165),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 65),
-                child: TableCalendar<Event>(
-                  locale: 'zh_TW',
-                  firstDay: DateTime.utc(2024, 1, 1),
-                  lastDay: DateTime.utc(2024, 12, 31),
-                  focusedDay: _focusedDay,
-                  calendarFormat: _calendarFormat,
-                  selectedDayPredicate: (day) {
-                    return isSameDay(_selectedDay, day);
-                  },
-                  onDaySelected: (selectedDay, focusedDay) {
-                    setState(() {
-                      _selectedDay = selectedDay;
-                      _focusedDay = focusedDay;
-                    });
-                  },
-                  onFormatChanged: (format) {
-                    setState(() {
-                      _calendarFormat = format;
-                    });
-                  },
-                  eventLoader: _getEventsForDay,
-                  calendarStyle: const CalendarStyle(
-                    markersMaxCount: 1,
-                    markerDecoration: BoxDecoration(
-                      color: Colors.blue,
-                      shape: BoxShape.circle,
-                    ),
-                    todayTextStyle: TextStyle(
-                      fontFamily: '851Tegaki',
-                      color: Colors.black,
-                    ),
-                    selectedTextStyle: TextStyle(
-                      fontFamily: '851Tegaki',
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                    defaultTextStyle: TextStyle(
-                      fontFamily: '851Tegaki',
-                      color: Colors.black,
-                    ),
-                    todayDecoration: BoxDecoration(
-                      color: Color.fromARGB(255, 222, 170, 93),
-                      shape: BoxShape.circle,
-                    ),
-                    selectedDecoration: BoxDecoration(
-                      color: Color.fromARGB(255, 180, 154, 222),
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-                  headerStyle: HeaderStyle(
-                    formatButtonVisible: false,
-                    titleCentered: true,
-                    leftChevronIcon: Icon(
-                      Icons.chevron_left,
-                      color: Color.fromARGB(255, 66, 66, 66),
-                    ),
-                    rightChevronIcon: Icon(
-                      Icons.chevron_right,
-                      color: Color.fromARGB(255, 66, 66, 66),
-                    ),
-                    titleTextStyle: TextStyle(
-                      fontFamily: '851Tegaki',
-                      fontSize: 20,
-                    ),
-                  ),
-                  daysOfWeekStyle: DaysOfWeekStyle(
-                    weekdayStyle: TextStyle(
-                      fontFamily: '851Tegaki',
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black,
-                    ),
-                    weekendStyle: TextStyle(
-                      fontFamily: '851Tegaki',
-                      fontWeight: FontWeight.bold,
-                      color: Color.fromARGB(255, 162, 12, 2),
-                    ),
-                  ),
+          // 添加重新整理按鈕
+          Positioned(
+            top: 20, // 距離頂部的距離
+            right: 20, // 距離右側的距離
+            child: IconButton(
+              icon: const Icon(Icons.refresh, color: Colors.white),
+              onPressed: () {
+                setState(() {
+                  _isLoading = true;
+                });
+                _loadEvents().then((_) {
+                  setState(() {
+                    _isLoading = false;
+                  });
+                });
+              },
+            ),
+          ),
+          // 使用 Positioned 設置行事曆
+          Positioned(
+            top: MediaQuery.of(context).size.height * 0.19, // 相對高度設定
+            left: MediaQuery.of(context).size.width * 0.13,  // 左右留白
+            right: MediaQuery.of(context).size.width * 0.13,
+            child: TableCalendar<Event>(
+              locale: 'zh_TW',
+              firstDay: DateTime.utc(2024, 1, 1),
+              lastDay: DateTime.utc(2024, 12, 31),
+              focusedDay: _focusedDay,
+              calendarFormat: _calendarFormat,
+              selectedDayPredicate: (day) {
+                return isSameDay(_selectedDay, day);
+              },
+              onDaySelected: (selectedDay, focusedDay) {
+                setState(() {
+                  _selectedDay = selectedDay;
+                  _focusedDay = focusedDay;
+                });
+              },
+              onFormatChanged: (format) {
+                setState(() {
+                  _calendarFormat = format;
+                });
+              },
+              eventLoader: _getEventsForDay,
+              calendarStyle: const CalendarStyle(
+                markersMaxCount: 1,
+                markerDecoration: BoxDecoration(
+                  color: Colors.blue,
+                  shape: BoxShape.circle,
+                ),
+                todayTextStyle: TextStyle(
+                  fontFamily: '851Tegaki',
+                  color: Colors.black,
+                ),
+                selectedTextStyle: TextStyle(
+                  fontFamily: '851Tegaki',
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+                defaultTextStyle: TextStyle(
+                  fontFamily: '851Tegaki',
+                  color: Colors.black,
+                ),
+                todayDecoration: BoxDecoration(
+                  color: Color.fromARGB(255, 222, 170, 93),
+                  shape: BoxShape.circle,
+                ),
+                selectedDecoration: BoxDecoration(
+                  color: Color.fromARGB(255, 180, 154, 222),
+                  shape: BoxShape.circle,
                 ),
               ),
-              const SizedBox(height: 8.0),
-              Expanded(
-                child: Builder(
-                  builder: (context) {
-                    final selectedDate = _selectedDay ?? _focusedDay;
-                    final events = _getEventsForDay(selectedDate);
+              headerStyle: HeaderStyle(
+                formatButtonVisible: false,
+                titleCentered: true,
+                leftChevronIcon: Icon(
+                  Icons.chevron_left,
+                  color: Color.fromARGB(255, 66, 66, 66),
+                ),
+                rightChevronIcon: Icon(
+                  Icons.chevron_right,
+                  color: Color.fromARGB(255, 66, 66, 66),
+                ),
+                titleTextStyle: TextStyle(
+                  fontFamily: '851Tegaki',
+                  fontSize: 20,
+                ),
+              ),
+              daysOfWeekStyle: DaysOfWeekStyle(
+                weekdayStyle: TextStyle(
+                  fontFamily: '851Tegaki',
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
+                ),
+                weekendStyle: TextStyle(
+                  fontFamily: '851Tegaki',
+                  fontWeight: FontWeight.bold,
+                  color: Color.fromARGB(255, 162, 12, 2),
+                ),
+              ),
+            ),
+          ),
+          // 使用 Positioned 設置行程列表
+          Positioned(
+            top: MediaQuery.of(context).size.height * 0.63, // 相對高度設定行程列表位置
+            left: 10,
+            right: 10,
+            bottom: 0,
+            child: Builder(
+              builder: (context) {
+                final selectedDate = _selectedDay ?? _focusedDay;
+                final events = _getEventsForDay(selectedDate);
 
-                    if (events.isEmpty) {
-                      return const Center(
-                        child: Text('今日無行程'),
-                      );
-                    }
+                if (events.isEmpty) {
+                  return const Center(
+                    child: Text('今日無行程'),
+                  );
+                }
 
-                    return ListView.builder(
-                      itemCount: events.length,
-                      itemBuilder: (context, index) {
-                        final event = events[index];
-                        return Dismissible(
-                          key: Key(
-                              event.id ?? '${event.name}_${event.startTime}'),
-                          background: Container(
-                            color: Colors.red,
-                            alignment: Alignment.centerRight,
-                            padding: const EdgeInsets.only(right: 20.0),
-                            child: const Icon(
-                              Icons.delete,
-                              color: Colors.white,
-                            ),
-                          ),
-                          direction: DismissDirection.endToStart,
-                          confirmDismiss: (direction) async {
-                            final confirmed = await showDialog<bool>(
-                              context: context,
-                              builder: (BuildContext context) {
-                                return AlertDialog(
-                                  title: const Text('確認刪除'),
-                                  content: const Text('確定要刪除這個行程嗎？'),
-                                  actions: [
-                                    TextButton(
-                                      onPressed: () =>
-                                          Navigator.pop(context, false),
-                                      child: const Text('取消'),
-                                    ),
-                                    TextButton(
-                                      onPressed: () {
-                                        Navigator.pop(context, true);
-                                      },
-                                      child: const Text('刪除',
-                                          style: TextStyle(color: Colors.red)),
-                                    ),
-                                  ],
-                                );
-                              },
-                            );
-
-                            if (confirmed == false) {
-                              await _loadEvents();
-                            } else {
-                              await _deleteEvent(event);
-                            }
-                            return false;
-                          },
-                          child: Card(
-                            margin: const EdgeInsets.symmetric(
-                              horizontal: 12.0,
-                              vertical: 4.0,
-                            ),
-                            child: ListTile(
-                              title: Text(
-                                event.name,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
+                return ListView.builder(
+                  itemCount: events.length,
+                  itemBuilder: (context, index) {
+                    final event = events[index];
+                    return Dismissible(
+                      key: Key(event.id ?? '${event.name}_${event.startTime}'),
+                      background: Container(
+                        color: Colors.red,
+                        alignment: Alignment.centerRight,
+                        padding: const EdgeInsets.only(right: 20.0),
+                        child: const Icon(
+                          Icons.delete,
+                          color: Color.fromARGB(255, 255, 255, 255),
+                        ),
+                      ),
+                      direction: DismissDirection.endToStart,
+                      confirmDismiss: (direction) async {
+                        final confirmed = await showDialog<bool>(
+                          context: context,
+                          builder: (BuildContext context) {
+                            return AlertDialog(
+                              title: const Text('確認刪除'),
+                              content: const Text('確定要刪除這個行程嗎？'),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.pop(context, false),
+                                  child: const Text('取消'),
                                 ),
-                              ),
-                              subtitle: Text(
-                                '時間: ${event.startTime} - ${event.endTime}\n地點: ${event.location}',
-                              ),
-                              trailing: IconButton(
-                                icon:
-                                    const Icon(Icons.delete, color: Colors.red),
-                                onPressed: () => _deleteEvent(event),
-                              ),
+                                TextButton(
+                                  onPressed: () {
+                                    Navigator.pop(context, true);
+                                  },
+                                  child: const Text('刪除', style: TextStyle(color: Colors.red)),
+                                ),
+                              ],
+                            );
+                          },
+                        );
+
+                        if (confirmed == false) {
+                          await _loadEvents();
+                        } else {
+                          await _deleteEvent(event);
+                        }
+                        return false;
+                      },
+
+                      child: Card(
+                        margin: const EdgeInsets.symmetric(
+                          horizontal: 12.0,
+                          vertical: 4.0,
+                        ),
+                        child: ListTile(
+                          title: Text(
+                            event.name,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
                             ),
                           ),
-                        );
-                      },
+                          subtitle: Text(
+                            '時間: ${event.startTime} - ${event.endTime}\n地點: ${event.location}',
+                          ),
+                          trailing: IconButton(
+                            icon: const Icon(Icons.delete, color: Color.fromARGB(255, 120, 120, 120)),
+                            onPressed: () => _deleteEvent(event),
+                          ),
+                        ),
+                      ),
                     );
                   },
-                ),
-              ),
-            ],
+                );
+              },
+            ),
           ),
         ],
       ),

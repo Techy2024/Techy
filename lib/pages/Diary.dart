@@ -6,8 +6,11 @@ class DiaryPage extends StatefulWidget {
   State<DiaryPage> createState() => _DiaryPageState();
 }
 
+// promt: 使用者是一位學生，請重點放於使用者講的話，並不強調此段對話，生成30~50字的短篇日記
+
 class _DiaryPageState extends State<DiaryPage> {
   List<String> diaryEntries = [
+    "2024-11-07: \n\n明天我要去體檢，今天感覺很累。希望能準備好，讓體檢順利進行。也想放鬆一下，調整狀態，讓自己保持精力充沛。",
     "2024-09-01: \n\n今天的天氣很好，我去了公園散步。",
     "2024-09-02: \n\n今天在宿舍睡了一天，什麼都沒做...",
     "2024-09-03: \n\n晚上跟朋友們一起去看了一場電影。",

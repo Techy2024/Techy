@@ -23,7 +23,7 @@ class _NotePageState extends State<NotePage> {
     User? currentUser = FirebaseAuth.instance.currentUser;
     if (currentUser != null) {
       String uid = currentUser.uid;
-      // 獲取 List 集合中 tag=1 的資料
+      // 獲取 List 集合中 tag=2 的資料
       QuerySnapshot snapshot = await firestore
           .collection('UserID')
           .doc(uid)
