@@ -61,6 +61,7 @@ class OllamaApiService {
 
   Future<String?> generateText(String text) async {
     final url = Uri.parse('http://10.0.2.2:11434/api/chat');
+    // final url = Uri.parse('http://192.168.0.152:11434/api/chat');
     var date = DateTime.now();
     var day = DateFormat('EEEE').format(date);
     

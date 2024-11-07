@@ -75,7 +75,7 @@ class LocationService extends ChangeNotifier {
       });
 
       _location =
-          '經度: ${position.longitude}, 緯度: ${position.latitude}, 地址: $address';
+          '地址: $address';
     } else {
       _location = '無法獲取使用者資訊';
     }
