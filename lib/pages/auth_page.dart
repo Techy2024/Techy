@@ -1,6 +1,6 @@
-import 'package:final_project/pages/home_page.dart';
-import 'package:final_project/pages/login_or_register_page.dart';
-import 'package:final_project/pages/choosePage.dart';
+import 'package:Techy/pages/home_page.dart';
+import 'package:Techy/pages/login_or_register_page.dart';
+import 'package:Techy/pages/choosePage.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';

@@ -1,7 +1,7 @@
-// import 'package:final_project/components/my_button.dart';
-// import 'package:final_project/components/square_tile.dart';
-// import 'package:final_project/components/textfield.dart';
-// import 'package:final_project/services/auth_service.dart';
+// import 'package:Techy/components/my_button.dart';
+// import 'package:Techy/components/square_tile.dart';
+// import 'package:Techy/components/textfield.dart';
+// import 'package:Techy/services/auth_service.dart';
 // import 'package:firebase_auth/firebase_auth.dart';
 // import 'package:flutter/gestures.dart';
 // import 'package:flutter/material.dart';

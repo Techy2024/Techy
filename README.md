@@ -1,4 +1,4 @@
-# Final_Project
+# Techy
 
 ## assets
     - terms and condition (使用者協議的部分)
