@@ -12,6 +12,8 @@ class _AddressSettingsPageState extends State<AddressSettingsPage> {
   final _companyController = TextEditingController();
   final _schoolController = TextEditingController();
 
+  bool _isEditable = true; // 控制是否可編輯
+
   @override
   void initState() {
     super.initState();
@@ -36,6 +38,7 @@ class _AddressSettingsPageState extends State<AddressSettingsPage> {
       }
     }
   }
+
   Future<void> _saveAddressData() async {
     User? currentUser = FirebaseAuth.instance.currentUser;
     if (currentUser != null) {
@@ -60,16 +63,7 @@ class _AddressSettingsPageState extends State<AddressSettingsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-<<<<<<< HEAD
       appBar: AppBar(title: Text("設定地址")),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            TextField(
-              controller: _homeController,
-              decoration: InputDecoration(labelText: "住家地址"),
-=======
       body: Container(
         decoration: BoxDecoration(
           image: DecorationImage(
@@ -79,128 +73,94 @@ class _AddressSettingsPageState extends State<AddressSettingsPage> {
         ),
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 150.0), // 左右間距20，上下間距100
-          child: Center( // 將內容居中顯示
+          child: Center(
             child: Container(
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.7), // 設定背景色為白色，並調整透明度
-                borderRadius: BorderRadius.circular(10), // 可選：為了更圓滑的邊角
+                color: Colors.white.withOpacity(0.7), // 白色背景，調整透明度
+                borderRadius: BorderRadius.circular(10), // 圓角
               ),
               child: Padding(
-                padding: const EdgeInsets.all(20.0), // 為背景框內的內容添加Padding
+                padding: const EdgeInsets.all(20.0),
                 child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center, // 垂直居中
-                  crossAxisAlignment: CrossAxisAlignment.center, // 水平居中
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     TextField(
                       controller: _homeController,
                       decoration: InputDecoration(
                         labelText: "住家地址",
-                        labelStyle: TextStyle(
-                          color: const Color.fromARGB(255, 69, 69, 69), // 設定字體顏色
-                        ),
+                        labelStyle: TextStyle(color: const Color.fromARGB(255, 69, 69, 69)),
                         enabledBorder: UnderlineInputBorder(
-                          borderSide: BorderSide(
-                            color: const Color.fromARGB(255, 150, 150, 150), // 設定底線顏色
-                            width: 2.0,
-                          ),
+                          borderSide: BorderSide(color: const Color.fromARGB(255, 150, 150, 150), width: 2.0),
                         ),
                         focusedBorder: UnderlineInputBorder(
-                          borderSide: BorderSide(
-                            color: const Color.fromARGB(255,  150, 150, 150), // 設定獲得焦點時的底線顏色
-                            width: 2.0,
-                          ),
+                          borderSide: BorderSide(color: const Color.fromARGB(255, 150, 150, 150), width: 2.0),
                         ),
                       ),
-                      enabled: _isEditable, // 控制是否可編輯
+                      enabled: _isEditable,
                     ),
-                    SizedBox(height: 20), // 增加空白區段，調整大小
+                    SizedBox(height: 20),
                     TextField(
                       controller: _companyController,
                       decoration: InputDecoration(
                         labelText: "公司地址",
-                        labelStyle: TextStyle(
-                          color: const Color.fromARGB(255, 69, 69, 69), // 設定字體顏色
-                        ),
+                        labelStyle: TextStyle(color: const Color.fromARGB(255, 69, 69, 69)),
                         enabledBorder: UnderlineInputBorder(
-                          borderSide: BorderSide(
-                            color: const Color.fromARGB(255, 150, 150, 150), // 設定底線顏色
-                            width: 2.0,
-                          ),
+                          borderSide: BorderSide(color: const Color.fromARGB(255, 150, 150, 150), width: 2.0),
                         ),
                         focusedBorder: UnderlineInputBorder(
-                          borderSide: BorderSide(
-                            color: const Color.fromARGB(255,  150, 150, 150), // 設定獲得焦點時的底線顏色
-                            width: 2.0,
-                          ),
+                          borderSide: BorderSide(color: const Color.fromARGB(255, 150, 150, 150), width: 2.0),
                         ),
                       ),
-                      enabled: _isEditable, // 控制是否可編輯
+                      enabled: _isEditable,
                     ),
-                    SizedBox(height: 20), // 增加空白區段，調整大小
+                    SizedBox(height: 20),
                     TextField(
                       controller: _schoolController,
                       decoration: InputDecoration(
                         labelText: "學校地址",
-                        labelStyle: TextStyle(
-                          color: const Color.fromARGB(255, 69, 69, 69), // 設定字體顏色
-                        ),
+                        labelStyle: TextStyle(color: const Color.fromARGB(255, 69, 69, 69)),
                         enabledBorder: UnderlineInputBorder(
-                          borderSide: BorderSide(
-                            color: const Color.fromARGB(255, 150, 150, 150), // 設定底線顏色為
-                            width: 2.0,
-                          ),
+                          borderSide: BorderSide(color: const Color.fromARGB(255, 150, 150, 150), width: 2.0),
                         ),
                         focusedBorder: UnderlineInputBorder(
-                          borderSide: BorderSide(
-                            color: const Color.fromARGB(255, 150, 150, 150), // 設定獲得焦點時的底線顏色
-                            width: 2.0,
-                          ),
+                          borderSide: BorderSide(color: const Color.fromARGB(255, 150, 150, 150), width: 2.0),
                         ),
                       ),
-                      enabled: _isEditable, // 控制是否可編輯
+                      enabled: _isEditable,
                     ),
-                    SizedBox(height: 50), // 增加更大的空白區段，調整按鈕間的間距
+                    SizedBox(height: 50),
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.center, // 水平居中
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         ElevatedButton(
                           onPressed: _saveAddressData,
                           child: Text("儲存"),
                         ),
-                        SizedBox(width: 20), // 增加兩個按鈕之間的間距
+                        SizedBox(width: 20),
                         ElevatedButton(
-                          onPressed: _toggleEditMode, // 觸發編輯模式的切換
+                          onPressed: () {
+                            setState(() {
+                              _isEditable = !_isEditable;
+                            });
+                          },
                           child: Text(_isEditable ? "取消編輯" : "編輯"),
                         ),
                       ],
                     ),
                     SizedBox(height: 50),
                     IconButton(
-                    icon: Icon(Icons.exit_to_app),
+                      icon: Icon(Icons.exit_to_app),
                       onPressed: () {
-                        _showLogoutDialog(); // 顯示登出確認對話框
+                        // 呼叫登出確認對話框
+                        _showLogoutDialog();
                       },
                     ),
-                    
                   ],
                 ),
               ),
->>>>>>> bbb6fae (feat: 加上圖標跟名字)
             ),
-            TextField(
-              controller: _companyController,
-              decoration: InputDecoration(labelText: "公司地址"),
-            ),
-            TextField(
-              controller: _schoolController,
-              decoration: InputDecoration(labelText: "學校地址"),
-            ),
-            SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: _saveAddressData,
-              child: Text("儲存"),
-            ),
-          ],
+          ),
         ),
       ),
     );
@@ -212,5 +172,28 @@ class _AddressSettingsPageState extends State<AddressSettingsPage> {
     _companyController.dispose();
     _schoolController.dispose();
     super.dispose();
+  }
+
+  void _showLogoutDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text("登出確認"),
+        content: Text("您確定要登出嗎？"),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text("取消"),
+          ),
+          TextButton(
+            onPressed: () {
+              // 登出邏輯
+              Navigator.of(context).pop();
+            },
+            child: Text("確定"),
+          ),
+        ],
+      ),
+    );
   }
 }
