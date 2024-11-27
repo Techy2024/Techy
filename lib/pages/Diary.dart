@@ -37,7 +37,7 @@ class _DiaryPageState extends State<DiaryPage> {
             left: 50,
             right: 20,
             child: Container(
-              height: 500,
+              height: 470,
               child: BookFx(
                 size: Size(MediaQuery.of(context).size.width * 1, 500),
                 pageCount: diaryEntries.length,

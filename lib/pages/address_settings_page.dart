@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:final_project/pages/home_page.dart'; // Import home_page.dart
+import 'package:final_project/pages/auth_page.dart'; // Import auth_page.dart
 
 class AddressSettingsPage extends StatefulWidget {
   @override
@@ -65,6 +67,7 @@ class _AddressSettingsPageState extends State<AddressSettingsPage> {
       _isEditable = !_isEditable;
     });
   }
+
   Future<void> _showLogoutDialog() async {
     showDialog(
       context: context,
@@ -72,29 +75,42 @@ class _AddressSettingsPageState extends State<AddressSettingsPage> {
         return AlertDialog(
           title: Text(
             '確認登出',
-            style: TextStyle(fontSize: 18), 
+            style: TextStyle(fontSize: 18),
           ),
           content: Text(
             '您確定要登出嗎？',
-            style: TextStyle(fontSize: 12), 
+            style: TextStyle(fontSize: 12),
           ),
           actions: <Widget>[
             TextButton(
               onPressed: () {
                 Navigator.of(context).pop(); // 關閉對話框
               },
-              child: Text('取消',style: TextStyle(fontSize: 14), ),
+              child: Text('取消', style: TextStyle(fontSize: 14)),
             ),
             TextButton(
               onPressed: () {
                 Navigator.of(context).pop(); // 關閉對話框
                 _signOut(); // 執行登出
+                // Navigate to the Auth Page after logging out
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => AuthPage()), // Navigate to Auth Page
+                );
               },
-              child: Text('確認',style: TextStyle(fontSize: 14), ),
+              child: Text('確認', style: TextStyle(fontSize: 14)),
             ),
           ],
         );
       },
+    );
+  }
+
+  void _goBackToHomePage() {
+    // Navigate to Home Page when "返回" is tapped
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => HomePage()), // Navigate to Home Page
     );
   }
 
@@ -137,7 +153,7 @@ class _AddressSettingsPageState extends State<AddressSettingsPage> {
                         ),
                         focusedBorder: UnderlineInputBorder(
                           borderSide: BorderSide(
-                            color: const Color.fromARGB(255,  150, 150, 150), // 設定獲得焦點時的底線顏色
+                            color: const Color.fromARGB(255, 150, 150, 150), // 設定獲得焦點時的底線顏色
                             width: 2.0,
                           ),
                         ),
@@ -160,7 +176,7 @@ class _AddressSettingsPageState extends State<AddressSettingsPage> {
                         ),
                         focusedBorder: UnderlineInputBorder(
                           borderSide: BorderSide(
-                            color: const Color.fromARGB(255,  150, 150, 150), // 設定獲得焦點時的底線顏色
+                            color: const Color.fromARGB(255, 150, 150, 150), // 設定獲得焦點時的底線顏色
                             width: 2.0,
                           ),
                         ),
@@ -195,8 +211,8 @@ class _AddressSettingsPageState extends State<AddressSettingsPage> {
                       mainAxisAlignment: MainAxisAlignment.center, // 水平居中
                       children: [
                         ElevatedButton(
-                          onPressed: _saveAddressData,
-                          child: Text("儲存"),
+                          onPressed: _isEditable ? _saveAddressData : _goBackToHomePage, // 儲存或返回
+                          child: Text(_isEditable ? "儲存" : "返回"),
                         ),
                         SizedBox(width: 20), // 增加兩個按鈕之間的間距
                         ElevatedButton(
@@ -205,24 +221,23 @@ class _AddressSettingsPageState extends State<AddressSettingsPage> {
                         ),
                       ],
                     ),
-                    SizedBox(height: 150),
+                    SizedBox(height: 50),
                     IconButton(
-                    icon: Icon(Icons.exit_to_app),
+                      icon: Icon(Icons.exit_to_app),
                       onPressed: () {
                         _showLogoutDialog(); // 顯示登出確認對話框
                       },
                     ),
-                    
                   ],
                 ),
               ),
             ),
           ),
         ),
-
       ),
     );
   }
+
   @override
   void dispose() {
     _homeController.dispose();
@@ -231,4 +246,3 @@ class _AddressSettingsPageState extends State<AddressSettingsPage> {
     super.dispose();
   }
 }
-
