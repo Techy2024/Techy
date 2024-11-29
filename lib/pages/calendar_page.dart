@@ -169,7 +169,9 @@ class _AddEventDialogState extends State<AddEventDialog> {
     return AlertDialog(
       title: const Text(
         '新增行程',
-        style: TextStyle(fontSize: 16),textAlign: TextAlign.center, ),
+        style: TextStyle(fontSize: 16),
+        textAlign: TextAlign.center,
+      ),
       content: Form(
         key: _formKey,
         child: SingleChildScrollView(
@@ -178,7 +180,10 @@ class _AddEventDialogState extends State<AddEventDialog> {
             children: [
               TextFormField(
                 controller: _nameController,
-                decoration: const InputDecoration(labelText: '行程名稱',labelStyle: TextStyle(fontSize: 14),),
+                decoration: const InputDecoration(
+                  labelText: '行程名稱',
+                  labelStyle: TextStyle(fontSize: 14),
+                ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return '請輸入行程名稱';
@@ -188,7 +193,10 @@ class _AddEventDialogState extends State<AddEventDialog> {
               ),
               TextFormField(
                 controller: _locationController,
-                decoration: const InputDecoration(labelText: '地點', labelStyle: TextStyle(fontSize: 14),),
+                decoration: const InputDecoration(
+                  labelText: '地點',
+                  labelStyle: TextStyle(fontSize: 14),
+                ),
               ),
               const SizedBox(height: 16),
               Row(
@@ -198,7 +206,11 @@ class _AddEventDialogState extends State<AddEventDialog> {
                       onPressed: _selectStartTime,
                       child: Text(
                         '開始: ${_startTime.format(context)}',
-                        style: TextStyle(fontSize: 14,color: const Color.fromARGB(255, 196, 98, 0),),),
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: const Color.fromARGB(255, 196, 98, 0),
+                        ),
+                      ),
                     ),
                   ),
                   Expanded(
@@ -206,7 +218,11 @@ class _AddEventDialogState extends State<AddEventDialog> {
                       onPressed: _selectEndTime,
                       child: Text(
                         '結束: ${_endTime.format(context)}',
-                        style: TextStyle(fontSize: 14,color: const Color.fromARGB(255, 196, 98, 0),),),
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: const Color.fromARGB(255, 196, 98, 0),
+                        ),
+                      ),
                     ),
                   ),
                 ],
@@ -228,7 +244,11 @@ class _AddEventDialogState extends State<AddEventDialog> {
           onPressed: () => Navigator.pop(context),
           child: const Text(
             '取消',
-            style: TextStyle(fontSize: 14,color: Color.fromARGB(255, 108, 108, 108),),),
+            style: TextStyle(
+              fontSize: 14,
+              color: Color.fromARGB(255, 108, 108, 108),
+            ),
+          ),
         ),
         TextButton(
           onPressed: () {
@@ -252,8 +272,11 @@ class _AddEventDialogState extends State<AddEventDialog> {
           },
           child: const Text(
             '確定',
-            style: TextStyle(fontSize: 14,color: Color.fromARGB(255, 108, 108, 108),),
+            style: TextStyle(
+              fontSize: 14,
+              color: Color.fromARGB(255, 108, 108, 108),
             ),
+          ),
         ),
       ],
     );
@@ -265,6 +288,270 @@ class CalendarPage extends StatefulWidget {
 
   @override
   State<CalendarPage> createState() => _CalendarPageState();
+}
+
+class OptimizedTimeSlotResolver {
+  // 定義時間區段權重
+  static const Map<String, double> INITIAL_TIME_WEIGHTS = {
+    'morning': 1.0,
+    'afternoon': 1.2,
+    'evening': 0.8,
+  };
+
+  // 使用者的時間偏好
+  late Map<String, double> _timeWeights;
+
+  OptimizedTimeSlotResolver(Map<String, double>? userTimePreferences) {
+    // 如果提供了使用者的時間偏好,則使用
+    // 否則使用初始的時間區段權重
+    _timeWeights = userTimePreferences ?? INITIAL_TIME_WEIGHTS;
+  }
+
+  void updateTimeWeights(Map<String, double> userTimePreferences) {
+    _timeWeights = {...INITIAL_TIME_WEIGHTS, ...userTimePreferences};
+  }
+
+  // 解決時間衝突的主要方法
+  static List<Event> resolveTimeConflicts(List<Event> events) {
+    if (events.isEmpty) return events;
+
+    // 1. 根據時間排序
+    events.sort((a, b) => a.startTime.compareTo(b.startTime));
+
+    List<Event> resolvedEvents = [];
+    Map<String, int> eventFrequency = _calculateEventFrequency(events);
+
+    for (var event in events) {
+      if (resolvedEvents.isEmpty) {
+        resolvedEvents.add(event);
+        continue;
+      }
+
+      // 檢查是否有衝突
+      if (_hasConflictWithAny(event, resolvedEvents)) {
+        Event adjustedEvent =
+            _findOptimalTimeSlot(event, resolvedEvents, eventFrequency);
+        resolvedEvents.add(adjustedEvent);
+      } else {
+        resolvedEvents.add(event);
+      }
+    }
+
+    return resolvedEvents;
+  }
+
+  // 計算事件在不同時段的頻率
+  static Map<String, int> _calculateEventFrequency(List<Event> events) {
+    Map<String, int> frequency = {};
+
+    for (var event in events) {
+      String timeSlot = _getTimeSlot(_parseTime(event.startTime));
+      frequency[timeSlot] = (frequency[timeSlot] ?? 0) + 1;
+    }
+
+    return frequency;
+  }
+
+  // 找出最佳的時間段
+  static Event _findOptimalTimeSlot(
+    Event event,
+    List<Event> existingEvents,
+    Map<String, int> eventFrequency,
+  ) {
+    // 獲取可用的時間段
+    List<TimeSlot> availableSlots = _findAvailableTimeSlots(existingEvents);
+
+    if (availableSlots.isEmpty) {
+      // 如果沒有可用時間段，則往後推遲
+      return _pushEventForward(event, existingEvents);
+    }
+
+    // 為每個可用時間段計算適合度分數
+    List<ScoredTimeSlot> scoredSlots = availableSlots.map((slot) {
+      double score = _calculateTimeSlotScore(
+        slot,
+        event,
+        eventFrequency,
+      );
+      return ScoredTimeSlot(slot: slot, score: score);
+    }).toList();
+
+    // 選擇得分最高的時間段
+    scoredSlots.sort((a, b) => b.score.compareTo(a.score));
+    TimeSlot bestSlot = scoredSlots.first.slot;
+
+    return Event(
+      name: event.name,
+      startTime: _formatTime(bestSlot.start),
+      endTime: _formatTime(bestSlot.end),
+      location: event.location,
+      id: event.id,
+    );
+  }
+
+  // 計算時間段的適合度分數
+  static double _calculateTimeSlotScore(
+    TimeSlot slot,
+    Event event,
+    Map<String, int> eventFrequency,
+  ) {
+    double score = 100.0;
+
+    // 1. 考慮時段權重
+    String timeSlot = _getTimeSlot(slot.start);
+    score *= INITIAL_TIME_WEIGHTS[timeSlot] ?? 1.0;
+
+    // 2. 考慮時間接近度（越接近原始時間越好）
+    DateTime originalStart = _parseTime(event.startTime);
+    Duration timeDiff = slot.start.difference(originalStart).abs();
+    score -= timeDiff.inMinutes * 0.1; // 每分鐘差異扣0.1分
+
+    // 3. 考慮時段擁擠度
+    int slotFrequency = eventFrequency[timeSlot] ?? 0;
+    score -= slotFrequency * 5; // 每個已存在的事件扣5分
+
+    // 4. 考慮時間完整性（盡量不切割時間）
+    Duration originalDuration =
+        _parseTime(event.endTime).difference(_parseTime(event.startTime));
+    Duration newDuration = slot.end.difference(slot.start);
+    if (originalDuration != newDuration) {
+      score -= 20; // 如果需要調整持續時間則扣分
+    }
+
+    return score;
+  }
+
+  // 找出所有可用的時間段
+  static List<TimeSlot> _findAvailableTimeSlots(List<Event> events) {
+    List<TimeSlot> occupiedSlots = events
+        .map((e) => TimeSlot(
+              start: _parseTime(e.startTime),
+              end: _parseTime(e.endTime),
+            ))
+        .toList();
+
+    List<TimeSlot> availableSlots = [];
+    DateTime currentTime = DateTime(2024, 1, 1, 6, 0); // 從早上6點開始
+    DateTime endOfDay = DateTime(2024, 1, 1, 22, 0); // 到晚上10點結束
+
+    while (currentTime.isBefore(endOfDay)) {
+      DateTime slotEnd = currentTime.add(const Duration(minutes: 30));
+
+      bool isAvailable = !occupiedSlots.any((slot) =>
+          (currentTime.isBefore(slot.end) && slotEnd.isAfter(slot.start)));
+
+      if (isAvailable) {
+        availableSlots.add(TimeSlot(start: currentTime, end: slotEnd));
+      }
+
+      currentTime = slotEnd;
+    }
+
+    return _mergeAdjacentSlots(availableSlots);
+  }
+
+  // 合併相鄰的空閒時間段
+  static List<TimeSlot> _mergeAdjacentSlots(List<TimeSlot> slots) {
+    if (slots.isEmpty) return slots;
+
+    slots.sort((a, b) => a.start.compareTo(b.start));
+    List<TimeSlot> mergedSlots = [slots.first];
+
+    for (int i = 1; i < slots.length; i++) {
+      TimeSlot current = slots[i];
+      TimeSlot previous = mergedSlots.last;
+
+      if (current.start == previous.end) {
+        mergedSlots.last = TimeSlot(start: previous.start, end: current.end);
+      } else {
+        mergedSlots.add(current);
+      }
+    }
+
+    return mergedSlots;
+  }
+
+  // 獲取時間段類型（早上/下午/晚上）
+  static String _getTimeSlot(DateTime time) {
+    int hour = time.hour;
+    if (hour >= 6 && hour < 12) return 'morning';
+    if (hour >= 12 && hour < 18) return 'afternoon';
+    return 'evening';
+  }
+
+  // 基本的時間處理方法
+  static DateTime _parseTime(String time) {
+    final parts = time.split(':');
+    return DateTime(2024, 1, 1, int.parse(parts[0]), int.parse(parts[1]));
+  }
+
+  static String _formatTime(DateTime time) {
+    return '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
+  }
+
+  static bool _hasConflictWithAny(Event event, List<Event> events) {
+    return events.any((existing) => _hasConflict(event, existing));
+  }
+
+  static bool _hasConflict(Event event1, Event event2) {
+    final start1 = _parseTime(event1.startTime);
+    final end1 = _parseTime(event1.endTime);
+    final start2 = _parseTime(event2.startTime);
+    final end2 = _parseTime(event2.endTime);
+
+    return (start1.isBefore(end2) && end1.isAfter(start2));
+  }
+
+  // 當找不到合適時間段時的後備方案
+  static Event _pushEventForward(Event event, List<Event> existingEvents) {
+    DateTime latestEnd = existingEvents
+        .map((e) => _parseTime(e.endTime))
+        .reduce((a, b) => a.isAfter(b) ? a : b);
+
+    Duration originalDuration =
+        _parseTime(event.endTime).difference(_parseTime(event.startTime));
+
+    String newStartTime = _formatTime(latestEnd);
+    String newEndTime = _formatTime(latestEnd.add(originalDuration));
+
+    return Event(
+      name: event.name,
+      startTime: newStartTime,
+      endTime: newEndTime,
+      location: event.location,
+      id: event.id,
+    );
+  }
+}
+
+// 時間段數據結構
+class TimeSlot {
+  final DateTime start;
+  final DateTime end;
+
+  TimeSlot({required this.start, required this.end});
+}
+
+// 帶評分的時間段
+class ScoredTimeSlot {
+  final TimeSlot slot;
+  final double score;
+
+  ScoredTimeSlot({required this.slot, required this.score});
+}
+
+// 使用擴展方法來保持原有的Event類別不變
+extension EventOptimization on Event {
+  Map<String, dynamic> toMap() {
+    return {
+      'date': DateFormat('yyyy/MM/dd').format(DateTime.now()),
+      'name': name,
+      'start_time': startTime,
+      'end_time': endTime,
+      'location': location,
+      'tag': 1,
+    };
+  }
 }
 
 class _CalendarPageState extends State<CalendarPage> {
@@ -621,7 +908,7 @@ class _CalendarPageState extends State<CalendarPage> {
           // 使用 Positioned 設置行事曆
           Positioned(
             top: MediaQuery.of(context).size.height * 0.19, // 相對高度設定
-            left: MediaQuery.of(context).size.width * 0.13,  // 左右留白
+            left: MediaQuery.of(context).size.width * 0.13, // 左右留白
             right: MediaQuery.of(context).size.width * 0.13,
             child: TableCalendar<Event>(
               locale: 'zh_TW',
@@ -744,14 +1031,16 @@ class _CalendarPageState extends State<CalendarPage> {
                               content: const Text('確定要刪除這個行程嗎？'),
                               actions: [
                                 TextButton(
-                                  onPressed: () => Navigator.pop(context, false),
+                                  onPressed: () =>
+                                      Navigator.pop(context, false),
                                   child: const Text('取消'),
                                 ),
                                 TextButton(
                                   onPressed: () {
                                     Navigator.pop(context, true);
                                   },
-                                  child: const Text('刪除', style: TextStyle(color: Colors.red)),
+                                  child: const Text('刪除',
+                                      style: TextStyle(color: Colors.red)),
                                 ),
                               ],
                             );
@@ -765,7 +1054,6 @@ class _CalendarPageState extends State<CalendarPage> {
                         }
                         return false;
                       },
-
                       child: Card(
                         margin: const EdgeInsets.symmetric(
                           horizontal: 12.0,
@@ -782,7 +1070,8 @@ class _CalendarPageState extends State<CalendarPage> {
                             '時間: ${event.startTime} - ${event.endTime}\n地點: ${event.location}',
                           ),
                           trailing: IconButton(
-                            icon: const Icon(Icons.delete, color: Color.fromARGB(255, 120, 120, 120)),
+                            icon: const Icon(Icons.delete,
+                                color: Color.fromARGB(255, 120, 120, 120)),
                             onPressed: () => _deleteEvent(event),
                           ),
                         ),
