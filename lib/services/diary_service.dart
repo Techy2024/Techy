@@ -6,42 +6,28 @@ import '../api/llama_dairy.dart';
 
 class DiaryService extends ChangeNotifier {
   final LlamaService _llamaService = LlamaService();
-  List<String> diaryEntries = [];
+  Stream<QuerySnapshot>? _diaryStream;
   Timer? _dailyDiaryTimer;
 
   DiaryService() {
-    _loadInitialDiaryEntries();
+    _initDiaryStream();
     _startDiaryGeneration();
   }
 
-  void _loadInitialDiaryEntries() async {
-    FirebaseFirestore firestore = FirebaseFirestore.instance;
+  void _initDiaryStream() {
     User? currentUser = FirebaseAuth.instance.currentUser;
-
-    if (currentUser == null) {
-      print("未登入，無法載入日記");
-      return;
-    }
-
-    try {
-      QuerySnapshot querySnapshot = await firestore
+    if (currentUser != null) {
+      _diaryStream = FirebaseFirestore.instance
           .collection('UserID')
           .doc(currentUser.uid)
           .collection('Diaries')
           .orderBy('date', descending: true)
-          .get();
-
-      diaryEntries = querySnapshot.docs.map((doc) {
-        String date =  doc.id;
-        String content = doc['content'];
-        return "$date: \n\n$content";
-      }).toList();
-
+          .snapshots();
       notifyListeners();
-    } catch (e) {
-      print("載入日記時發生錯誤: $e");
     }
   }
+
+  Stream<QuerySnapshot>? get diaryStream => _diaryStream;
 
   void _startDiaryGeneration() {
     print('啟動日記生成計時器');
@@ -85,51 +71,52 @@ class DiaryService extends ChangeNotifier {
     }
   }
 
-  Future<void> _generateDailyDiary() async {
-    FirebaseFirestore firestore = FirebaseFirestore.instance;
-    User? currentUser = FirebaseAuth.instance.currentUser;
+Future<void> _generateDailyDiary() async {
+  FirebaseFirestore firestore = FirebaseFirestore.instance;
+  User? currentUser = FirebaseAuth.instance.currentUser;
 
-    if (currentUser == null) {
-      print("未登入，無法獲取對話記錄。");
-      return;
-    }
-
-    String uid = currentUser.uid;
-    final chatLogs = await _fetchChatLogs();
-
-    try {
-      final diary = await _llamaService.generateDiary(uid, chatLogs);
-      await _saveDiaryToFirebase(uid, diary);
-
-      diaryEntries.insert(0, "${DateTime.now().toIso8601String()}: \n\n$diary");
-      notifyListeners();
-
-      print("日記已成功生成並儲存。");
-    } catch (e) {
-      print("日記生成失敗: $e");
-    }
+  if (currentUser == null) {
+    print("未登入，無法獲取對話記錄。");
+    return;
   }
+
+  String uid = currentUser.uid;
+  final chatLogs = await _fetchChatLogs();
+
+  try {
+    final diary = await _llamaService.generateDiary(uid, chatLogs);
+    await _saveDiaryToFirebase(uid, diary);
+
+    // 移除 diaryEntries 相關操作，因為我們現在使用 Stream
+    // Stream 會自動更新 UI
+    print("日記已成功生成並儲存。");
+  } catch (e) {
+    print("日記生成失敗: $e");
+  }
+}
 
   Future<void> _saveDiaryToFirebase(String uid, String diary) async {
     FirebaseFirestore firestore = FirebaseFirestore.instance;
     String dateId = DateTime.now().toIso8601String().split('T')[0];
 
     Map<String, dynamic> diaryData = {
+      'date': dateId,
       'content': diary,
     };
-
     try {
-      DocumentReference docRef = firestore
+      // 使用 Firestore 的 add() 方法，Firestore 會自動生成文件 ID
+      DocumentReference docRef = await firestore
           .collection('UserID')
           .doc(uid)
           .collection('Diaries')
-          .doc(dateId);
+          .add(diaryData);  // 使用 add() 方法，Firestore 自動生成 ID
 
-      await docRef.set(diaryData);
-      print("日記已成功儲存到 Firebase Firestore，ID: $dateId");
+      print(docRef.id);  // 打印自動生成的 ID
+      print("日記已成功儲存到 Firebase Firestore，ID: ${docRef.id}");
     } catch (e) {
       print("儲存日記時發生錯誤: $e");
     }
+
   }
 
   @override

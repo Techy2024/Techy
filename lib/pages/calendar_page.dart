@@ -991,8 +991,8 @@ class _CalendarPageState extends State<CalendarPage> {
           ),
           // 使用 Positioned 設置行程列表
           Positioned(
-            top: MediaQuery.of(context).size.height * 0.63, // 相對高度設定行程列表位置
-            left: 10,
+            top: MediaQuery.of(context).size.height * 0.7, // 相對高度設定行程列表位置
+            left: 15,
             right: 10,
             bottom: 0,
             child: Builder(

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:bookfx/bookfx.dart';
 import 'package:provider/provider.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../services/diary_service.dart';
 
 class DiaryPage extends StatefulWidget {
@@ -30,19 +31,34 @@ class _DiaryPageState extends State<DiaryPage> {
               height: 470,
               child: Consumer<DiaryService>(
                 builder: (context, diaryService, child) {
-                  return BookFx(
-                    size: Size(MediaQuery.of(context).size.width * 1, 500),
-                    pageCount: diaryService.diaryEntries.length,
-                    currentPage: (index) {
-                      return _buildDiaryPage(context, index);
+                  return StreamBuilder<QuerySnapshot>(
+                    stream: diaryService.diaryStream,
+                    builder: (context, snapshot) {
+                      if (snapshot.hasError) {
+                        return Center(child: Text('Something went wrong'));
+                      }
+
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return Center(child: CircularProgressIndicator());
+                      }
+
+                      final diaries = snapshot.data?.docs ?? [];
+                      
+                      return BookFx(
+                        size: Size(MediaQuery.of(context).size.width * 1, 500),
+                        pageCount: diaries.length,
+                        currentPage: (index) {
+                          return _buildDiaryPage(context, diaries[index]);
+                        },
+                        lastCallBack: (index) {
+                          setState(() {});
+                        },
+                        nextPage: (index) {
+                          return _buildDiaryPage(context, diaries[index - 1]);
+                        },
+                        controller: bookController,
+                      );
                     },
-                    lastCallBack: (index) {
-                      setState(() {});
-                    },
-                    nextPage: (index) {
-                      return _buildDiaryPage(context, index - 1);
-                    },
-                    controller: bookController,
                   );
                 },
               ),
@@ -53,9 +69,10 @@ class _DiaryPageState extends State<DiaryPage> {
     );
   }
 
-  Widget _buildDiaryPage(BuildContext context, int index) {
-    final diaryEntries = Provider.of<DiaryService>(context).diaryEntries;
-
+  Widget _buildDiaryPage(BuildContext context, DocumentSnapshot diary) {
+    final date = diary['date'] as String;
+    final content = diary['content'] as String;
+    
     return Container(
       child: Stack(
         children: [
@@ -64,7 +81,7 @@ class _DiaryPageState extends State<DiaryPage> {
             left: 50,
             right: 40,
             child: Text(
-              diaryEntries[index],
+              "$date:\n\n$content",
               style: TextStyle(
                 fontSize: 18,
                 fontFamily: '851Tegaki',
