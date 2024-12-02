@@ -252,53 +252,12 @@ class _NotePageState extends State<NotePage>
               top: 290,
               left: 90,
               right: 70,
-<<<<<<< HEAD
-              bottom: 150,
-              child: ListView.builder(
-                itemCount: _notes.length,
-                itemBuilder: (context, index) {
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 8.0),
-                    child: Row(
-                      children: [
-                        GestureDetector(
-                          onTap: () => _toggleCheck(index),
-                          child: Container(
-                            width: 20,
-                            height: 20,
-                            decoration: BoxDecoration(
-                              border: Border.all(color: Colors.black),
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                            child: _notes[index]['isChecked']
-                                ? Icon(Icons.check, size: 12)
-                                : null,
-                          ),
-                        ),
-                        SizedBox(width: 10),
-                        Expanded(
-                          child: Text(
-                            _notes[index]['text'],
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: Colors.black,
-                              fontFamily: '851Tegaki',
-                              decoration: _notes[index]['isChecked']
-                                  ? TextDecoration.lineThrough
-                                  : TextDecoration.none,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-=======
+
               bottom: 180,
               child: NotificationListener<ScrollNotification>(
                 onNotification: (ScrollNotification notification) {
                   _checkScrollability();
                   return true;
->>>>>>> 3319cf6c7ee86a56f25a01ecc685ddc313dfa7f5
                 },
                 child: ListView.builder(
                   controller: _scrollController,
