@@ -200,7 +200,6 @@ class _NotePageState extends State<NotePage>
 
       _checkScrollability();
 
-      // 加上刪除成功提示
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Delete successful!'),
@@ -214,7 +213,11 @@ class _NotePageState extends State<NotePage>
   Widget build(BuildContext context) {
     return WillPopScope(
       onWillPop: () async {
-        await _deleteCheckedNotes();
+        setState(() {
+          for (var note in _notes) {
+            note['isChecked'] = false;
+          }
+        });
         return true;
       },
       child: Scaffold(
@@ -252,7 +255,6 @@ class _NotePageState extends State<NotePage>
               top: 290,
               left: 90,
               right: 70,
-
               bottom: 180,
               child: NotificationListener<ScrollNotification>(
                 onNotification: (ScrollNotification notification) {
