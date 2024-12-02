@@ -1,21 +1,37 @@
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart'; // 確保導入 Firestore 的包
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class NotePage extends StatefulWidget {
   @override
   _NotePageState createState() => _NotePageState();
 }
 
-class _NotePageState extends State<NotePage> {
+class _NotePageState extends State<NotePage>
+    with SingleTickerProviderStateMixin {
   final List<Map<String, dynamic>> _notes = [];
   final TextEditingController _controller = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
+  late AnimationController _blinkController;
+  bool _isScrollable = false;
+  bool _isOverflowing = false;
 
   @override
   void initState() {
     super.initState();
-    _loadNotesFromFirestore(); // 加載資料
+    _loadNotesFromFirestore();
+    _blinkController = AnimationController(
+      duration: const Duration(milliseconds: 800),
+      vsync: this,
+    )..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _blinkController.dispose();
+    _controller.dispose();
+    _scrollController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadNotesFromFirestore() async {
@@ -23,7 +39,6 @@ class _NotePageState extends State<NotePage> {
     User? currentUser = FirebaseAuth.instance.currentUser;
     if (currentUser != null) {
       String uid = currentUser.uid;
-      // 獲取 List 集合中 tag=2 的資料
       QuerySnapshot snapshot = await firestore
           .collection('UserID')
           .doc(uid)
@@ -31,32 +46,93 @@ class _NotePageState extends State<NotePage> {
           .where('tag', isEqualTo: 2)
           .get();
 
-      // 將每個文檔的資料轉換為所需格式並添加到 _notes
-      for (var doc in snapshot.docs) {
-        String date = doc['date'];
-        String name = doc['name'];
-        String noteText = '$date: $name'; // 格式化字符串
+      setState(() {
+        _notes.clear();
+        for (var doc in snapshot.docs) {
+          _notes.add({
+            'text': doc['name'],
+            'isChecked': false,
+          });
+        }
+        _checkScrollability();
+      });
+    }
+  }
+
+  void _checkScrollability() {
+    setState(() {
+      _isScrollable = _notes.length > 5;
+      _isOverflowing = _scrollController.hasClients &&
+          _scrollController.position.maxScrollExtent > 0;
+    });
+  }
+
+  Future<void> _addNote() async {
+    if (_controller.text.isNotEmpty) {
+      FirebaseFirestore firestore = FirebaseFirestore.instance;
+      User? currentUser = FirebaseAuth.instance.currentUser;
+
+      if (currentUser != null) {
+        String uid = currentUser.uid;
+
+        await firestore.collection('UserID').doc(uid).collection('List').add({
+          'date': '',
+          'start_time': '',
+          'end_time': '',
+          'location': '',
+          'name': _controller.text,
+          'tag': 2,
+        });
 
         setState(() {
           _notes.add({
-            'text': noteText,
+            'text': _controller.text,
             'isChecked': false,
           });
+          _controller.clear();
         });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('New todo item added successfully!'),
+            duration: Duration(seconds: 2),
+          ),
+        );
+
+        _checkScrollability();
       }
     }
   }
 
-  void _addNote() {
-    if (_controller.text.isNotEmpty) {
-      setState(() {
-        _notes.add({
-          'text': _controller.text,
-          'isChecked': false,
-        });
-        _controller.clear();
-      });
-    }
+  void _showAddNoteDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Add New Todo'),
+          content: TextField(
+            controller: _controller,
+            decoration: InputDecoration(hintText: 'Enter event name'),
+          ),
+          actions: [
+            TextButton(
+              child: Text('Cancel'),
+              onPressed: () {
+                Navigator.of(context).pop();
+                _controller.clear();
+              },
+            ),
+            TextButton(
+              child: Text('Add'),
+              onPressed: () {
+                _addNote();
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
 
   void _toggleCheck(int index) {
@@ -65,28 +141,72 @@ class _NotePageState extends State<NotePage> {
     });
   }
 
+  void _showDeleteConfirmDialog() {
+    int checkedCount = _notes.where((note) => note['isChecked']).length;
+
+    if (checkedCount == 0) return;
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Confirm Deletion'),
+          content: Text(
+              'Are you sure you want to delete $checkedCount selected todo item(s)?'),
+          actions: [
+            TextButton(
+              child: Text('Cancel'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              child: Text('Delete'),
+              onPressed: () {
+                _deleteCheckedNotes();
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   Future<void> _deleteCheckedNotes() async {
     FirebaseFirestore firestore = FirebaseFirestore.instance;
+    User? currentUser = FirebaseAuth.instance.currentUser;
 
-    for (var note in _notes) {
-      if (note['isChecked']) {
-        // 根據 note['text'] 解析出 date 和 name
-        String noteText = note['text'];
-        List<String> parts = noteText.split(': ');
-        String date = parts[0];
-        String name = parts[1];
+    if (currentUser != null) {
+      String uid = currentUser.uid;
 
-        // 刪除 Firestore 中對應的資料
+      for (var note in _notes.where((note) => note['isChecked']).toList()) {
         QuerySnapshot querySnapshot = await firestore
+            .collection('UserID')
+            .doc(uid)
             .collection('List')
-            .where('date', isEqualTo: date)
-            .where('name', isEqualTo: name)
+            .where('name', isEqualTo: note['text'])
+            .where('tag', isEqualTo: 2)
             .get();
 
         for (var doc in querySnapshot.docs) {
-          await firestore.collection('List').doc(doc.id).delete();
+          await doc.reference.delete();
         }
       }
+
+      setState(() {
+        _notes.removeWhere((note) => note['isChecked']);
+      });
+
+      _checkScrollability();
+
+      // 加上刪除成功提示
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Delete successful!'),
+          duration: Duration(seconds: 2),
+        ),
+      );
     }
   }
 
@@ -94,10 +214,14 @@ class _NotePageState extends State<NotePage> {
   Widget build(BuildContext context) {
     return WillPopScope(
       onWillPop: () async {
-        await _deleteCheckedNotes(); // 刪除被檢查的筆記
-        return true; // 返回 true 以允許導航
+        await _deleteCheckedNotes();
+        return true;
       },
       child: Scaffold(
+        floatingActionButton: FloatingActionButton(
+          onPressed: _showAddNoteDialog,
+          child: Icon(Icons.add),
+        ),
         body: Stack(
           children: [
             Positioned.fill(
@@ -108,20 +232,27 @@ class _NotePageState extends State<NotePage> {
             ),
             Positioned(
               top: 250,
-              left: 150,
-              child: Text(
-                'To Do List',
-                style: TextStyle(
-                  fontSize: 24,
-                  color: const Color.fromARGB(255, 90, 87, 87),
-                  fontFamily: '851Tegaki',
-                ),
+              left: 0,
+              right: 0,
+              child: Column(
+                children: [
+                  Text(
+                    'To Do List',
+                    style: TextStyle(
+                      fontSize: 24,
+                      color: const Color.fromARGB(255, 90, 87, 87),
+                      fontFamily: '851Tegaki',
+                    ),
+                  ),
+                  SizedBox(height: 20),
+                ],
               ),
             ),
             Positioned(
-              top: 270,
+              top: 290,
               left: 90,
               right: 70,
+<<<<<<< HEAD
               bottom: 150,
               child: ListView.builder(
                 itemCount: _notes.length,
@@ -161,7 +292,85 @@ class _NotePageState extends State<NotePage> {
                       ],
                     ),
                   );
+=======
+              bottom: 180,
+              child: NotificationListener<ScrollNotification>(
+                onNotification: (ScrollNotification notification) {
+                  _checkScrollability();
+                  return true;
+>>>>>>> 3319cf6c7ee86a56f25a01ecc685ddc313dfa7f5
                 },
+                child: ListView.builder(
+                  controller: _scrollController,
+                  itemCount: _notes.length,
+                  itemBuilder: (context, index) {
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8.0),
+                      child: Row(
+                        children: [
+                          GestureDetector(
+                            onTap: () => _toggleCheck(index),
+                            child: Container(
+                              width: 20,
+                              height: 20,
+                              decoration: BoxDecoration(
+                                border: Border.all(color: Colors.black),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: _notes[index]['isChecked']
+                                  ? Icon(Icons.check, size: 16)
+                                  : null,
+                            ),
+                          ),
+                          SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              _notes[index]['text'],
+                              style: TextStyle(
+                                fontSize: 18,
+                                color: Colors.black,
+                                fontFamily: '851Tegaki',
+                                decoration: _notes[index]['isChecked']
+                                    ? TextDecoration.lineThrough
+                                    : TextDecoration.none,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ),
+            if (_isOverflowing)
+              Positioned(
+                bottom: 150,
+                left: 0,
+                right: 0,
+                child: Center(
+                  child: FadeTransition(
+                    opacity: Tween<double>(begin: 0.2, end: 1.0)
+                        .animate(_blinkController),
+                    child: Icon(
+                      Icons.keyboard_arrow_down,
+                      size: 40,
+                      color: Colors.grey.withOpacity(0.7),
+                    ),
+                  ),
+                ),
+              ),
+            Positioned(
+              bottom: 100,
+              left: 0,
+              right: 0,
+              child: Center(
+                child: _notes.any((note) => note['isChecked'])
+                    ? ElevatedButton(
+                        onPressed: _showDeleteConfirmDialog,
+                        child: Text('Delete Selected Items'),
+                      )
+                    : SizedBox.shrink(),
               ),
             ),
           ],
