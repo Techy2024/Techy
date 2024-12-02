@@ -140,7 +140,7 @@ class _NotePageState extends State<NotePage> {
                               borderRadius: BorderRadius.circular(4),
                             ),
                             child: _notes[index]['isChecked']
-                                ? Icon(Icons.check, size: 16)
+                                ? Icon(Icons.check, size: 12)
                                 : null,
                           ),
                         ),
@@ -149,7 +149,7 @@ class _NotePageState extends State<NotePage> {
                           child: Text(
                             _notes[index]['text'],
                             style: TextStyle(
-                              fontSize: 18,
+                              fontSize: 16,
                               color: Colors.black,
                               fontFamily: '851Tegaki',
                               decoration: _notes[index]['isChecked']

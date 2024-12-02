@@ -174,7 +174,7 @@ class LocationService extends ChangeNotifier {
     User? currentUser = FirebaseAuth.instance.currentUser;
     if (currentUser != null) {
       String uid = currentUser.uid;
-      print('ccc');
+      print('開始判斷固定行程');
       // 獲取今天的定位資料
       DateTime todayStart = DateTime.now().subtract(Duration(days: 1));
       DateTime todayEnd = DateTime.now();
@@ -191,7 +191,7 @@ class LocationService extends ChangeNotifier {
       
       // 處理這些定位資料，判斷固定行程
       List<Map<String, dynamic>> fixedLocations = processLocations(locationData);
-  print('ddd');
+      print('儲存固定行程');
       // 儲存固定行程資料
       for (var fixedLocation in fixedLocations) {
         await FirebaseFirestore.instance

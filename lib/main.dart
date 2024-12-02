@@ -1,5 +1,6 @@
 import 'package:final_project/pages/auth_page.dart';
 import 'package:final_project/services/location_service.dart';
+import 'package:final_project/services/diary_service.dart'; 
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
@@ -21,6 +22,7 @@ class MyApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => LocationService()),
+        ChangeNotifierProvider(create: (_) => DiaryService()),
       ],
       child: const MaterialApp(
         debugShowMaterialGrid: false,

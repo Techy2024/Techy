@@ -155,6 +155,7 @@ class _HomePageState extends State<HomePage> {
 
   // Process recognized speech with LLaMA
   Future<void> _processRecognizedSpeech(String speech) async {
+    print(speech);
     setState(() {
       _isLoading = true;
       _gifPath = 'lib/assets/gif/$type/jump.gif';
@@ -256,18 +257,6 @@ class _HomePageState extends State<HomePage> {
     final locationService = Provider.of<LocationService>(context);
     
     return CupertinoPageScaffold(
-      // navigationBar: CupertinoNavigationBar(
-      //   trailing: CupertinoButton(
-      //     padding: EdgeInsets.zero, // 移除內邊距
-      //     onPressed: () => FirebaseAuth.instance.signOut(),
-      //     child: Icon(
-      //       CupertinoIcons.share,
-      //       color: CupertinoColors.activeBlue, // 設定圖示顏色（可以自定義）
-      //     ),
-      //   ),
-      // ),
-
-
       child: Container(
         decoration: BoxDecoration(
           image: DecorationImage(
@@ -336,34 +325,6 @@ class _HomePageState extends State<HomePage> {
                 ),
               ),
             ),
-            // Location Display
-            // Positioned(
-            //   top: 100,
-            //   left: 20,
-            //   child: Container(
-            //     padding: EdgeInsets.all(10),
-            //     decoration: BoxDecoration(
-            //       color: CupertinoColors.systemBackground.withOpacity(0.8),
-            //       borderRadius: BorderRadius.circular(10),
-            //     ),
-            //     child: Column(
-            //       crossAxisAlignment: CrossAxisAlignment.start,
-            //       children: [
-            //         Text(
-            //           '當前位置:',
-            //           style: TextStyle(
-            //             fontSize: 18,
-            //             fontWeight: FontWeight.bold,
-            //           ),
-            //         ),
-            //         Text(
-            //           locationService.location,
-            //           style: TextStyle(fontSize: 16),
-            //         ),
-            //       ],
-            //     ),
-            //   ),
-            // ),
 
             // Navigation Buttons
             ..._buildNavigationButtons(),
@@ -443,6 +404,7 @@ class _HomePageState extends State<HomePage> {
           width: width,
           height: height,
           color: Colors.transparent,
+          //這裡設定按鈕位置(顯示框線)
           // decoration: BoxDecoration(
           //   color: Colors.blue, // 按鈕背景色
           //   borderRadius: BorderRadius.circular(10), // 邊框圓角

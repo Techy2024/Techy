@@ -65,10 +65,12 @@ class OllamaApiService {
     final url = Uri.parse('http://192.168.56.1:11434/api/chat');
     
     var date = DateTime.now();
+    print('現在時間:$date');
     var day = DateFormat('EEEE').format(date);
+    print('現在日期:$day');
     
     // 添加系統提示來改善回應品質
-    final systemPrompt = '''你的名字是 Techy，一個用於幫助使用者安排行程的 AI 助手。請以活潑的語氣回答問題，並儘量保持回答的字數在20字以內。
+    final systemPrompt = '''你的名字是 Techy，一個用於幫助使用者安排行程的 AI 助手兼朋友。請以活潑的語氣回答問題，並儘量保持回答的字數在20字以內。
       傳入的訊息格式會是[今天的日期是YYYY/MM/DD，星期幾，使用者傳入的訊息是:content]
       回答之前請先分析content內的訊息意圖後，再依以下的規則輸出。
 
@@ -82,7 +84,7 @@ class OllamaApiService {
       - 傳入的訊息會是以日期開始，例如："今天日期是2024/10/07，星期一"，這些是付加資訊，使用者傳入的訊息是這之後的文字
 
         
-      1.對於排程相關的訊息（如 "明天早上要去寄信" 、 "今天要去買牛奶"、"提醒我..."、"幫我紀錄..."），請以"type=1,date=YYYY/MM/DD,start_time=hh:mm:ss,end_time=HH:MM:SS,name=事件名稱,location=事件地點或null,chatResponse= <聊天回應>"這樣的方式回覆，細節如下:
+      1.對於排程相關的訊息（如 "明天早上要去寄信" 、 "今天要去買牛奶"、"提醒我..."、"幫我紀錄..."），請以"type=1,date=YYYY/MM/DD,start_time=hh:mm:ss,end_time=HH:MM:SS,name=事件名稱,location=事件地點或null,chatResponse=..."這樣的方式回覆，細節如下:
 
         - 開頭加上 "type=1"，接著提供以下信息：
           - `date=yyyy/mm/dd`
@@ -90,15 +92,15 @@ class OllamaApiService {
           - 'end_time="hh:mm:ss"'
           - `name=事件名稱`
           - `location=事件發生地點`
-
+        - 請特別注意"日期"，妥善判斷日當日或是其他日期
         - 事件名稱不需要是名詞，可以是動詞，例如"買衣服"、"找朋友"、"聽講座"、"寫作業"
         - 日期跟事件名稱是必須，若使用者未提供則視為type=2，不可直接設定為特定日期，例如使用者若只傳入:"去吃飯"、"要上課"，則不將其視為事項
 
 
         - 附加規則：
-        - 傳入的訊息會是以日期開始，例如："今天日期是2024/10/07，星期一"。請依此判斷使用者想新增的事件日期與時間。
-        - 如果訊息中提到 "明天"，視為今天的日期加一天。
-        - 如果訊息中提到 "後天"，視為今天的日期加兩天。
+        - 傳入的訊息會是以日期開始，例如："現在時間:2024-12-02 07:57:57.496026，Monday。請依此判斷使用者想新增的事件日期與時間。
+        - 請特別注意如果是"當日"的事件，例如:"我晚點要..."、"等等要..."，則回覆的date也應該是使用者傳入的日期
+
 
         - 若出現"早上"、"中午"、"下午"、"晚上"等字眼，時間可依此規則替換
           - 早上：start_time=9:00，end_time=10:00
@@ -108,17 +110,16 @@ class OllamaApiService {
 
         - 若未知start_time、end_time或location的值，則直接設為null
 
-        - 聊天回應要保持專業但友善的語氣，例如：「好的，我幫你把『去學校』安排在下禮拜二📅」。
+        - 聊天回應要保持專業但友善的語氣，例如：「好的，我幫你把『去學校』安排在下禮拜二📅」，並且紙告知日期，不告知安排的時間。
 
-      2.對於一般聊天或閒聊（如 "嗨，我今天過得不太好"），請以"type=2,chatResponse= <聊天回應>"的方式回覆，細節如下:
-        - 開頭加上 "type=2"，然後直接回應使用者的訊息。
+      2.對於一般聊天或閒聊（如 "嗨，我今天過得不太好"），請以"type=2,chatResponse=..."的方式回覆，細節如下:
         - 請用積極和鼓勵的語氣回覆，例如：「聽起來有點困難呢，但我相信你可以的 💪」。
 
       ''';
 
     final body = jsonEncode({
       // "model": "llama3.2:latest",
-      "model": "llama3.1:latest",
+      "model": "llama3.2:latest",
       "messages": [
         {
           "role": "system",
@@ -126,7 +127,7 @@ class OllamaApiService {
         },
         {
           "role": "user",
-          "content": '''今天的日期是$date，$day。使用者傳入的訊息是: $text'''
+          "content": '''現在時間:$date，$day。使用者傳入的訊息是: $text'''
         }
       ],
       "stream": false
@@ -138,86 +139,74 @@ class OllamaApiService {
         body: body,
       );
 
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        print('API呼叫成功: $data');
-        
-        final content = data['message']['content'];
+if (response.statusCode == 200) {
+  final data = jsonDecode(response.body);
+  print('API呼叫成功: $data');
+  
+  final content = data['message']['content'];
+  
+  // 檢查回應類型
+  if (content.contains('type=1')) {
+    // 使用各個標籤作為識別，不依賴特定分隔符
+    String? extractValue(String label) {
+      final pattern = RegExp('$label=[""]?([^,\n"]+)[""]?');
+      final match = pattern.firstMatch(content);
+      return match?.group(1)?.trim();
+    }
 
-        // 其餘的解析邏輯保持不變...
-        if (content.contains('type=1')) {
-          // 原有的type=1解析邏輯...
-          String? date;
-          String? startTime;
-          String? endTime;
-          String? name;
-          String? location;
+    // 提取各個欄位值
+    final date = extractValue('date');
+    final startTime = extractValue('start_time');
+    final endTime = extractValue('end_time');
+    final name = extractValue('name');
+    final location = extractValue('location');
+    final chatResponse = extractValue('chatResponse');
 
-          final dateMatch =
-              RegExp(r'date=([0-9]{4}/[0-9]{2}/[0-9]{2})').firstMatch(content);
-          if (dateMatch != null) {
-            date = dateMatch.group(1);
-          }
+    // 輸出解析結果供除錯
+    print('解析結果:');
+    print('日期: $date');
+    print('開始時間: $startTime');
+    print('結束時間: $endTime');
+    print('事件名稱: $name');
+    print('地點: $location');
+    print('對話回應: $chatResponse');
 
-          final startTimeMatch =
-              RegExp(r'start_time=([0-9]{1,2}:[0-9]{1,2}(?::[0-9]{1,2})?)')
-                  .firstMatch(content);
-          if (startTimeMatch != null) {
-            startTime = startTimeMatch.group(1);
-          }
+    // 根據開始時間是否存在決定標籤
+    int tag = (startTime != null && startTime != 'null') ? 1 : 2;
+    
+    // 儲存事件到 Firestore
+    if (date != null && name != null) {
+      await saveEventToFirestore(date, startTime, endTime, name, location, tag);
+    }
 
-          final endTimeMatch =
-              RegExp(r'end_time=([0-9]{1,2}:[0-9]{1,2}(?::[0-9]{1,2})?)')
-                  .firstMatch(content);
-          if (endTimeMatch != null) {
-            endTime = endTimeMatch.group(1);
-          }
+    // 返回對話回應
+    if (chatResponse != null) {
+      await saveChatToFirestore(text, chatResponse);
+      return chatResponse;
+    }
+  } else if (content.contains('type=2')) {
+    // 處理 type=2 的情況
+    final chatResponse = extractValue('chatResponse',content);
+    if (chatResponse != null) {
+      await saveChatToFirestore(text, chatResponse);
+      return chatResponse;
+    }
+  }
 
-          final nameMatch = RegExp(r'name=([^,]+)').firstMatch(content);
-          if (nameMatch != null) {
-            name = nameMatch.group(1);
-          }
+  // 若無法解析則返回原始內容
+  return content.trim();
+}
 
-          final locationMatch =
-              RegExp(r'location=([^,\.]+)').firstMatch(content);
-          if (locationMatch != null) {
-            location = locationMatch.group(1);
-          }
-
-          print('日期 = ${date ?? "null"}');
-          print('起始時間 = ${startTime ?? "null"}');
-          print('結束時間 = ${endTime ?? "null"}');
-          print('事件名稱 = ${name ?? "null"}');
-          print('地點 = ${location ?? "null"}');
-
-          int tag = (startTime != null && startTime != 'null') ? 1 : 2;
-          await saveEventToFirestore(date, startTime, endTime, name, location, tag);
-
-          final chatResponseMatch =
-              RegExp(r'chatResponse="?(.+?)"?$').firstMatch(content);
-          if (chatResponseMatch != null) {
-            String chatResponse = chatResponseMatch.group(1)!;
-            await saveChatToFirestore(text, chatResponse);
-            return chatResponse;
-          }
-        } else {
-          final chatResponseMatch =
-              RegExp(r'chatResponse="?(.+?)"?$').firstMatch(content);
-          if (chatResponseMatch != null) {
-            String chatResponse = chatResponseMatch.group(1)!;
-            await saveChatToFirestore(text, chatResponse);
-            return chatResponse;
-          }
-        }
-        
-        // 如果上述都沒有匹配到，返回原始內容
-        await saveChatToFirestore(text, content.trim());
-        return content.trim();
-      }
     } catch (e) {
       print('發生錯誤: $e');
       return null;
     }
     return null;
   }
+  
+}
+// 提取正則匹配的共用方法
+String? extractValue(String label, String content) {
+  final pattern = RegExp('$label=[""]?([^,\n"]+)[""]?');
+  return pattern.firstMatch(content)?.group(1)?.trim();
 }
